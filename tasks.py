@@ -1,5 +1,6 @@
 from crewai import Task
 
+#CLASSE PER PERSONALIZZAZIONE TASK
 class CustomTask():
 
     def first_task(self, agente):

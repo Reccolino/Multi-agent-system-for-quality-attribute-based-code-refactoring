@@ -3,8 +3,10 @@ import os
 from crewai import Agent
 from crewai import LLM
 
-
+#CLASSE PER PERSONALIZZAZIONE AGENTI
 class CustomAgent():
+
+    #NEL COSTRUTTORE è DEFINITO IL MODELLO UTILIZZATO DA TUTTI I MODELLI
     def __init__(self):
         self.llm= LLM (model="mistral/mistral-small-latest", api_key=os.getenv("MISTRAL_API_KEY"))
 

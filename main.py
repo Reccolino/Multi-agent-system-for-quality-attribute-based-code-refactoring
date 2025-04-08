@@ -13,7 +13,7 @@ def run():
     task1= tasks.first_task(agente1)
     task2= tasks.second_task(agente2, task1)
 
-
+    #CREAZIONE CREW
     crew = Crew(
         agents= [agente1, agente2],
         tasks= [task1,task2],
