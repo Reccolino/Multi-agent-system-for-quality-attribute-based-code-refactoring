@@ -1,6 +1,6 @@
 from crewai import Crew, Process
 
-from agents import CustomAgent
+from NormalScripts.agents import CustomAgent
 from tasks import CustomTask
 
 def run():

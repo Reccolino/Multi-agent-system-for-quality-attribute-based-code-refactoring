@@ -1,0 +1,140 @@
+Description	Resource	Path	Location	Type
+lineLength cannot be resolved or is not a field	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 516	Java Problem
+lineLength cannot be resolved or is not a field	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 526	Java Problem
+lineLength cannot be resolved or is not a field	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 536	Java Problem
+The constructor Base32(boolean) is undefined	Base32InputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 77	Java Problem
+The constructor Base32(boolean) is undefined	Base32OutputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 81	Java Problem
+The constructor Base32(boolean) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 315	Java Problem
+The constructor Base32(boolean) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 323	Java Problem
+The constructor Base32(boolean) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 331	Java Problem
+The constructor Base32(boolean) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 466	Java Problem
+The constructor Base32(boolean) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 477	Java Problem
+The constructor Base32(boolean) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 493	Java Problem
+The constructor Base32(boolean) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 534	Java Problem
+The constructor Base32(byte) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 367	Java Problem
+The constructor Base32(int, byte[], boolean, byte, CodecPolicy) is undefined	Base32InputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 121	Java Problem
+The constructor Base32(int, byte[], boolean, byte, CodecPolicy) is undefined	Base32OutputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 124	Java Problem
+The constructor Base32(int, byte[], boolean, byte, CodecPolicy) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 339	Java Problem
+The constructor Base32(int, byte[], boolean, byte) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 431	Java Problem
+The constructor Base32(int, byte[], boolean, byte) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 432	Java Problem
+The constructor Base32(int, byte[], boolean) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 422	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32InputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 97	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32OutputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 101	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 420	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 421	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 425	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 426	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 428	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 429	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 430	Java Problem
+The constructor Base32(int, byte[]) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 434	Java Problem
+The constructor Base32(int, null, boolean, byte, CodecPolicy) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 169	Java Problem
+The constructor Base32(int, null, boolean, byte, CodecPolicy) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 294	Java Problem
+The constructor Base32(int, null, boolean, byte, CodecPolicy) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 344	Java Problem
+The constructor Base32(int, null) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 427	Java Problem
+The constructor Base32(int) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 251	Java Problem
+The constructor Base32(int) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 419	Java Problem
+The constructor Base32(int) is undefined	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 524	Java Problem
+The constructor BaseNCodecInputStream(InputStream, Base32, boolean) is undefined	Base32InputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 77	Java Problem
+The constructor BaseNCodecInputStream(InputStream, Base32, boolean) is undefined	Base32InputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 97	Java Problem
+The constructor BaseNCodecInputStream(InputStream, Base32, boolean) is undefined	Base32InputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 121	Java Problem
+The constructor BaseNCodecOutputStream(OutputStream, Base32, boolean) is undefined	Base32OutputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 81	Java Problem
+The constructor BaseNCodecOutputStream(OutputStream, Base32, boolean) is undefined	Base32OutputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 101	Java Problem
+The constructor BaseNCodecOutputStream(OutputStream, Base32, boolean) is undefined	Base32OutputStream.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 124	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 296	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 303	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 376	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 377	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 378	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 379	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 380	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 385	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 386	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 387	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 388	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 389	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 390	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 391	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 392	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 393	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 398	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 399	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 400	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 401	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 402	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 403	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 404	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 405	Java Problem
+The method builder() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 406	Java Problem
+The method encode(byte[]) in the type Base32 is not applicable for the arguments (byte[], int, int, BaseNCodec.Context)	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 550	Java Problem
+The method encode(byte[]) in the type Base32 is not applicable for the arguments (byte[], int, int, BaseNCodec.Context)	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 552	Java Problem
+The method encode(byte[]) in the type Base32 is not applicable for the arguments (byte[], int, int)	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 353	Java Problem
+The method encode(byte[]) in the type Base32 is not applicable for the arguments (byte[], int, int)	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 447	Java Problem
+The method encodeAsString(byte[]) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 237	Java Problem
+The method encodeAsString(byte[]) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 253	Java Problem
+The method encodeAsString(byte[]) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 317	Java Problem
+The method encodeAsString(byte[]) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 361	Java Problem
+The method encodeAsString(byte[]) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 370	Java Problem
+The method getCodecPolicy() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 171	Java Problem
+The method getCodecPolicy() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 175	Java Problem
+The method getEncodedLength(byte[]) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 516	Java Problem
+The method getEncodedLength(byte[]) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 526	Java Problem
+The method getEncodedLength(byte[]) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 536	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 467	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 468	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 469	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 470	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 471	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 472	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 473	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 474	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 479	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 482	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 485	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 487	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 488	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 489	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 490	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 495	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 498	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 501	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 503	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 504	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 505	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 506	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 507	Java Problem
+The method isInAlphabet(byte) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 508	Java Problem
+The method isStrictDecoding() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 170	Java Problem
+The method isStrictDecoding() is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 174	Java Problem
+The method randomData(BaseNCodec, int) in the type BaseNTestData is not applicable for the arguments (Base32, int)	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 515	Java Problem
+The method randomData(BaseNCodec, int) in the type BaseNTestData is not applicable for the arguments (Base32, int)	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 525	Java Problem
+The method randomData(BaseNCodec, int) in the type BaseNTestData is not applicable for the arguments (Base32, int)	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 535	Java Problem
+The method readResults(byte[], int, int, BaseNCodec.Context) is undefined for the type Base32	Base32Test.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 554	Java Problem
+Type mismatch: cannot convert from Base32 to BaseNCodec	Base32InputStreamTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 189	Java Problem
+Type mismatch: cannot convert from Base32 to BaseNCodec	Base32InputStreamTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 223	Java Problem
+Type mismatch: cannot convert from Base32 to BaseNCodec	Base32OutputStreamTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 114	Java Problem
+Type mismatch: cannot convert from Base32 to BaseNCodec	Base32OutputStreamTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 148	Java Problem
+The constructor CharEncoding() is deprecated	CharEncodingTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec	line 36	Java Problem
+The constructor CharSequenceUtils() is deprecated	CharSequenceUtilsTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 136	Java Problem
+The constructor Crypt() is deprecated	CryptTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/digest	line 73	Java Problem
+The constructor Md5Crypt() is deprecated	Md5CryptTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/digest	line 37	Java Problem
+The constructor Sha2Crypt() is deprecated	Sha2CryptTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/digest	line 28	Java Problem
+The constructor StringUtils() is deprecated	StringUtilsTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 62	Java Problem
+The constructor UnixCrypt() is deprecated	UnixCryptTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/digest	line 33	Java Problem
+The value of the field Base32.BYTES_PER_ENCODED_BLOCK is not used	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 53	Java Problem
+At least one of the problems in category 'resource' is not analysed due to a compiler option being ignored	DigestUtils.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/digest	line 1351	Java Problem
+At least one of the problems in category 'resource' is not analysed due to a compiler option being ignored	MessageDigestAlgorithmsTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/digest	line 207	Java Problem
+At least one of the problems in category 'resource' is not analysed due to a compiler option being ignored	Rule.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/language/bm	line 344	Java Problem
+At least one of the problems in category 'resource' is not analysed due to a compiler option being ignored	Rule.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/language/bm	line 350	Java Problem
+At least one of the problems in category 'unused' is not analysed due to a compiler option being ignored	CharSequenceUtilsTest.java	/commons-codec-1.18.0-src/src/test/java/org/apache/commons/codec/binary	line 133	Java Problem
+Plugin execution not covered by lifecycle configuration: org.apache.maven.plugins:maven-antrun-plugin:3.1.0:run (execution: javadoc.resources, phase: generate-sources)	pom.xml	/commons-codec-1.18.0-src	line 24	Maven Project Build Lifecycle Mapping Problem
+Plugin execution not covered by lifecycle configuration: org.apache.maven.plugins:maven-artifact-plugin:3.5.3:check-buildplan (execution: check-buildplan, phase: validate)	pom.xml	/commons-codec-1.18.0-src	line 24	Maven Project Build Lifecycle Mapping Problem
+Description	Resource	Path	Location	Type
+The import org.apache.commons.codec.StringUtils cannot be resolved	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 7	Java Problem
+The method validateCharacter(long, BaseNCodec.Context) is undefined for the type Base32	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 496	Java Problem
+The method validateCharacter(long, BaseNCodec.Context) is undefined for the type Base32	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 505	Java Problem
+The method validateCharacter(long, BaseNCodec.Context) is undefined for the type Base32	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 511	Java Problem
+The method validateCharacter(long, BaseNCodec.Context) is undefined for the type Base32	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 526	Java Problem
+The method validateTrailingCharacters() is undefined for the type Base32	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 494	Java Problem
+The method validateTrailingCharacters() is undefined for the type Base32	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 500	Java Problem
+The method validateTrailingCharacters() is undefined for the type Base32	Base32.java	/commons-codec-1.18.0-src/src/main/java/org/apache/commons/codec/binary	line 518	Java Problem

@@ -1,0 +1,15 @@
+task1:
+   agent: agente1
+   expected_outputs: >
+     Tavolo da gioco dettagliato con stack, aggressività, posizione e altri parametri (se necessari)
+   description: > 
+     Esempio di tavolo da gioco da 8 persone
+     
+
+task2:
+   agent: agente2
+   expected_outputs: >
+     Mani con cui mi conviene fare All in preflop da UTG, in base al tavolo da gioco
+   description: > 
+     Consigliare una mossa
+   #context: task1
