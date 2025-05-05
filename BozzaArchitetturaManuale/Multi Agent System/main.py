@@ -3,7 +3,7 @@ import time
 import requests
 from crewai import Crew, Process
 
-from BozzaArchitetturaManuale.agents import CustomAgent
+from agents import CustomAgent
 from tasks import CustomTask
 
 def run():
@@ -23,12 +23,13 @@ def run():
     url= 'https://sonarcloud.io/api/measures/component?metricKeys=ncloc%2Ccode_smells%2Ccomplexity&component=reccolino_progettoapache1'
     #url= 'https://localhost:9000/api/measures/component?metricKeys=ncloc%2Ccode_smells%2Ccomplexity&component= <  >' CHIAMATA A LOCALHOST
     #devi modellare l'url per farti restituire le metriche che ti interessano (metricKeys)
+    #"http://localhost:9000/api/qualitygates/project_status?projectKey=progetto-java"  ULR per vedere se il progetto passa il Quality Gate
 
     header = {
         'Authorization': f'Bearer {os.getenv("SONAR_CLOUD_API_TOKEN")}'   #il token si deve nascondere (mettilo nell'environment)
     }
 
-    response= requests.get(url=url, headers=header)
+    response= requests.get(url=url, headers=header)  #DA FARE IN UNA CLASSE A PARTE, OVVIAMENTE
 
     print(f"RESPONSE: {response.json()}")
 

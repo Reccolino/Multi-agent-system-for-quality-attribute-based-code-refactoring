@@ -1,6 +1,7 @@
 import os
 
 from crewai import Agent, LLM
+from crewai_tools.tools.code_docs_search_tool.code_docs_search_tool import CodeDocsSearchTool
 
 from langchain_huggingface import HuggingFaceEndpoint
 
@@ -23,19 +24,21 @@ class CustomAgent():
     def first_agent(self):
         return Agent(
             role="Prompt generator",
-            goal="Generate a prompt to improve the Java code",
+            goal="Generate a prompt to improve the {file_content} code",
             backstory="Knowledge of best practices and prompt engineering techniques to formulate a highly optimized prompt.",
-            llm=self.llm
+            llm=self.llm,
+            input_keys=["file_content"]
         )
 
     #@agent
     def second_agent(self):
         return Agent(
             role="Expert on code refactoring",
-            goal="To improve, when possible, the code {file_content}, without generate these errors {error_content}",
+            goal="To improve, when possible, the code of first agent, without generate errors and keeping the licenses ",
             llm=self.llm,
             backstory="Knowledge of Java language (version 17), Java's best practise and Java structure (Maven)",
-            input_keys=["file_content","error_content"]
+            input_keys=["file_content"],
+            toosls= CodeDocsSearchTool()
             ##tools= [search_tool]  posso inserire un tool di ricerca su Google
             #knowledge_sources  per migliorare ancora di piu la conscenza di Java ???
 
