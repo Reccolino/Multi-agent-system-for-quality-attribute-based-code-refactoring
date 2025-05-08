@@ -2,8 +2,10 @@ import os
 import shutil
 import stat
 import subprocess
+import time
 from typing import Final
 
+import pandas as pd
 from git import Repo
 import requests
 
@@ -13,11 +15,10 @@ ORG_URL= "apache"
 TOPIC_URL= "commons"
 DIRECTORY= "./cloned_repos"
 
+#header che contiene il token di SonarQube, usato in tutte le chiamate API
 HEADER: Final[dict[str, str]] = {
     "Authorization": f"Bearer {os.getenv("SONAR_LOCAL_API_TOKEN")}"
 }
-#header che contiene il token di SonarQube, usato in tutte le chiamate API
-
 
 commons_projects = [
     "lang",
@@ -40,8 +41,11 @@ def clone_progetti_Git():
         path = f"./cloned_repos/{project}"
         print(f"Clonando {url}")
         Repo.clone_from(url, path)
+        time.sleep(2)   #pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)
+
         #repo = Repo.clone_from(url, path, recurse_submodules=True)  #!!!!!!
         #repo.submodule_update(recursive=True, init=True)  #!!!!!
+
 #QUESTO è UN CLONE MANUALE, POI ANDRA FATTO IN MODO DINAMICO MODELLANDO LA RICHIESTA A GIT TRAMITE response, header e API key
 #PROBLEMA: l'api key di github supporta al max 60 richieste all'ora
 
@@ -153,6 +157,31 @@ def elimina_da_locale(progetto_da_eliminare):
         print(f"Errore durante la rimozione finale di {path}: {e}")
 
 
+def crea_markdown(data_json, project, data_file):
+
+    valori_metriche = {}
+
+    for measure in data_json["component"]["measures"]:
+        metrica = measure.get("metric")
+        #if metrica in valori_metriche:
+        valori_metriche[metrica] = measure.get("value", "N/A")
+
+    dati = {
+        "Progetto": [project],
+        "Coverage": [valori_metriche.get("coverage", "N/A")],
+        "Bugs": [valori_metriche.get("bugs", "N/A")],
+        "Code Smells": [valori_metriche.get("code_smells", "N/A")],
+        "Duplicated Lines Density": [valori_metriche.get("duplicated_lines_density", "N/A")],
+        "Vulnerabilities": [valori_metriche.get("vulnerabilities", "N/A")]
+    }
+
+    df = pd.DataFrame(dati)
+    file_esiste = os.path.isfile(data_file)
+    #se il file .csv esiste già allora non ripetere l'header (Progetto, Bugs, Coverage, ecc...)
+    df.to_csv(f"{data_file}",mode='a', index=False, header=not file_esiste)
+
+
+
 def risultati(directory):
     """
     Visualizzazione dei risultati dell'analisi statica che SonarQube ha effettuato per ogni progetto
@@ -198,9 +227,6 @@ def risultati(directory):
 
             print(f"L'analisi di {project} ha restituito: {response.json()}")
 
-                        #TOD: SALVARE METRICHE PER OGNI PROGETTO IN UN FILE .csv
-
-
             #se il progetto è su SonarQube, ma lo scanner aveva dato problemi, allora quel progetto è rimasto su Sonar
             #ma senza l'analisi statica del codice. Questo significa che è un progetto inutile che va tolto da Sonar (e in locale)
             if not(response.json().get("component").get("measures")):
@@ -209,6 +235,8 @@ def risultati(directory):
                 elimina_da_Sonar(project)
                 elimina_da_locale(project)
 
+            else :
+                crea_markdown(response.json(), project, "attributes_before_refactoring")
 
                         #TOD: QUI VA FATTO L'IF (MINING) CON LA SOGLIA MASSIMA DELLE METRICHE DEI PROGETTI ---> DA FARE PIU AVANTI
 
@@ -217,8 +245,7 @@ def risultati(directory):
 
 
 
-
-clone_progetti_Git()
-creazione_progetti_Sonar(DIRECTORY)
+#clone_progetti_Git()
+#creazione_progetti_Sonar(DIRECTORY)
 risultati(DIRECTORY)
 
