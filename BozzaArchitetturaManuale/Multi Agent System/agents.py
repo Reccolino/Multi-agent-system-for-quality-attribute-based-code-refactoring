@@ -3,41 +3,41 @@ import os
 from crewai import Agent, LLM
 from crewai_tools.tools.code_docs_search_tool.code_docs_search_tool import CodeDocsSearchTool
 
-from langchain_huggingface import HuggingFaceEndpoint
-
 
 #CLASSE PER PERSONALIZZAZIONE AGENTI
 class CustomAgent():
 
 
+    #NEL COSTRUTTORE è DEFINITO IL MODELLO UTILIZZATO DA TUTTI GLI AGENTI
+    llm = LLM(
+        model="gemini/gemini-1.5-flash",
+        api_key=os.getenv("GOOGLE_API_KEY")
+    )
 
-    #NEL COSTRUTTORE è DEFINITO IL MODELLO UTILIZZATO DA TUTTI I MODELLI
-    def __init__(self):
-        self.llm= LLM(
-            model="gemini/gemini-1.5-flash",
-            api_key=os.getenv("GOOGLE_API_KEY")
-
-        )
+    '''def __init__(self, LLM):
+        self.llm= LLM '''  #questo vale se voglio usare diversi llm per gli agenti
 
 
     #@agent
     def first_agent(self):
-        return Agent(
+        Agent(
             role="Prompt generator",
-            goal="Generate a prompt to improve the {file_content} code",
+            goal="Generate a prompt to improve the {file_content} code. In particular {quality_attributes_to_improve}",
             backstory="Knowledge of best practices and prompt engineering techniques to formulate a highly optimized prompt.",
             llm=self.llm,
-            input_keys=["file_content"]
+            input_keys=["file_content", "quality_attributes_to_improve"]
         )
+        return Agent
 
     #@agent
     def second_agent(self):
-        return Agent(
+       return Agent(
             role="Expert on code refactoring",
-            goal="To improve, when possible, the code of first agent, without generate errors and keeping the licenses ",
+            goal="To improve, when possible, the code of first agent"
+                 " without generate errors and keeping the licenses ",
             llm=self.llm,
             backstory="Knowledge of Java language (version 17), Java's best practise and Java structure (Maven)",
-            input_keys=["file_content"],
+            #input_keys=["file_content"],
             toosls= CodeDocsSearchTool()
             ##tools= [search_tool]  posso inserire un tool di ricerca su Google
             #knowledge_sources  per migliorare ancora di piu la conscenza di Java ???
@@ -45,6 +45,8 @@ class CustomAgent():
             # possiamo specializzare questo agente assegnandogli il tool di ricerca web (importandolo da librerie di CrewAI o di LangChain)
             # questo significa che l'agente ha la "skill" di fare ricerche sul web e, quindi, non rispondere solamente in base alle sue conoscenze
         )
+
+
 
     def third_agent(self):
         return Agent(

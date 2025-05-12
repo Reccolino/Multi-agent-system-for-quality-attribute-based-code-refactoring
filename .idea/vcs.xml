@@ -4,15 +4,11 @@
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/beanutils" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/cli" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/codec" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/collections" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/compress" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/configuration" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/io" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/lang" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/logging" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/math" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/validator" vcs="Git" />
   </component>
 </project>
