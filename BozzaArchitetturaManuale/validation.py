@@ -304,8 +304,33 @@ class Validation(BaseValidation):
 
 
 
-validation = Validation()
+#validation = Validation()
 #validation.clone_progetti_Git()
 #validation.creazione_progetti_Sonar()
 #validation.risultati()
 
+param = {
+    "component": f"ProgettoApache_codec",
+    "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
+    # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
+    # "blocker_violations,critical_violations",
+        "security_rating, vulnerabilities",
+    "qualifiers": "FIL",
+    "s": "metric",
+    "metricSort": "security_rating",
+    "ps": 1,
+    "asc": "false"
+}
+try:
+    response = requests.get("http://localhost:9000/api/measures/component_tree", headers=HEADER, params=param)
+
+    response.raise_for_status()
+    print(json.dumps(response.json(), indent=4))
+
+    print(f"{DIRECTORY}/codec/{response.json().get("components")[0].get("path")}")
+
+except requests.exceptions.HTTPError as e:
+    print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_codec: {e}")
+
+except requests.exceptions.RequestException as e:
+    print(f"Errore di rete o altro problema nella richiesta: {e}")

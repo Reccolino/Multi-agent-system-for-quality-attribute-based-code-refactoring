@@ -1,12 +1,26 @@
+import json
+
+import requests
 from crewai import Task
 from crewai.project import task
 
+from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
+
 
 #CLASSE PER PERSONALIZZAZIONE TASK
-class CustomTask():
+class CustomTask:
+
+    def first_task(self, agente):
+        return Task(
+            agent=agente,
+            description="Make API call to return the worst class path of the directory in term of quality attribute",
+            expected_output= "Class path",
+            #input_keys=["repository"]
+        )
+
 
     #@task
-    def first_task(self, agente):
+    def second_task(self, agente):
         return Task(
             agent=agente,
             description="Analyze the code and generate a well-structured and clear prompt, "
@@ -14,12 +28,12 @@ class CustomTask():
             #SENZA TEMPLATE del file l'agente che opera su questo task non sa che input prendere
             #con input_keys=["file_content"] l'agente si aspetta un input ma poi devo specificarlo da qualche parte nel task tramite template
             #se il placeholder non c'è, l'agente non lo vedrà mai
-            expected_output="Optimized prompt to be used as input for another LLM",
+            expected_output="Optimized prompt to be used as input for another Agent",
             #input_keys=["file_content"]
         )
 
     #@task
-    def second_task(self, agente, task1):
+    def third_task(self, agente, task1):
         return Task(
             agent=agente,
             description="The agent takes the prompt as input, executes it, and returns the code generated from"
@@ -33,7 +47,7 @@ class CustomTask():
             context=[task1]
         )
 
-    def third_task(selfself, agente, task2):
+    def fourth_task(selfself, agente, task2):
         return Task(
             agent=agente,
             description="You need to connect to the project that is on sonarqube via api call. Once connected, "
