@@ -24,7 +24,11 @@ HEADER: Final[dict[str, str]] = {
     "Authorization": f"Bearer {os.getenv("SONAR_LOCAL_API_TOKEN")}"
 }
 
-commons_projects = [
+header_git = {
+            "Authorization": f"Bearer {os.getenv("GITHUB_API_TOKEN")}"
+}
+
+'''commons_projects = [
     "lang",
     "io",
     "math",
@@ -36,7 +40,7 @@ commons_projects = [
     "beanutils",
     "configuration",
     "validator",
-]
+]'''
 
 
 class BaseValidation(ABC):
@@ -71,19 +75,40 @@ class BaseValidation(ABC):
 class Validation(BaseValidation):
 
 
+
     def clone_progetti_Git(self):
-        for project in commons_projects:
-            url = f"{BASE_URL}/{ORG_URL}/{TOPIC_URL}-{project}.git"
-            path = f"{DIRECTORY}/{project}"
+        #for project in commons_projects:
+        #url = f"{BASE_URL}/{ORG_URL}/{TOPIC_URL}-{project}.git"
+        #url = "https://github.com/orgs/LPODISIM2024/repositories?visibility=private"
+        repos_url= "https://api.github.com/search/repositories?q=apache+commons+language:java&per_page=50"
+        #repos_url = f"https://api.github.com/orgs/LPODISIM2025/repos?type=private"
+
+        response = requests.get(repos_url, headers=header_git)
+        repos = response.json()
+        #path = f"{DIRECTORY}"
+        #print(json.dumps(repos, indent=3))
+
+        for repository in repos["items"]:
+            clone_url = repository.get("clone_url")
+            print(f"Clonando {clone_url}")
+            path_destinazione = f"{DIRECTORY}/{repository.get("name")}"
+
+            Repo.clone_from(clone_url, path_destinazione)
+            time.sleep(2)  # pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)
+
+        '''for repository in repos:
+            url = repository.get("clone_url")
             print(f"Clonando {url}")
-            Repo.clone_from(url, path, recurse_submodules=True)
-            time.sleep(2)   #pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)
+            path_destinazione = f"{DIRECTORY}/{repository.get("name")}"
+
+            Repo.clone_from(url, path_destinazione)
+            time.sleep(2)   #pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)'''
 
             #repo = Repo.clone_from(url, path, recurse_submodules=True)  #!!!!!!
             #repo.submodule_update(recursive=True, init=True)  #!!!!!
 
     #QUESTO è UN CLONE MANUALE, POI ANDRA FATTO IN MODO DINAMICO MODELLANDO LA RICHIESTA A GIT TRAMITE response, header e API key
-    #PROBLEMA: l'api key di github supporta al max 60 richieste all'ora
+
 
 
 
@@ -95,8 +120,8 @@ class Validation(BaseValidation):
                 continue
 
             param = {
-                "name": f"ProgettoApache_{repository}",
-                "project": f"ProgettoApache_{repository}"
+                "name": f"Progetto_{repository}",
+                "project": f"Progetto_{repository}"
             }
 
             url = "http://localhost:9000/api/projects/create"
@@ -105,14 +130,26 @@ class Validation(BaseValidation):
                response = requests.post(url, headers= HEADER, params= param)
 
                response.raise_for_status()
-               print(f"ProgettoApache_{repository} creato")
-               self.scanner_da_terminale(param, os.path.join(DIRECTORY, repository))
+               print(f"Progetto_{repository} creato")
+               pom_path = self.search_pom(repository)
+               self.scanner_da_terminale(param, pom_path)   #os.path.join(DIRECTORY, pom_path))
 
             except requests.exceptions.HTTPError as e:
                print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_{repository}: {e}")
 
             except requests.exceptions.RequestException as e:
                print(f"Errore di rete o altro problema nella richiesta: {e}")
+
+
+
+    @staticmethod
+    def search_pom(repository):
+        print(repository)
+        print(f"{DIRECTORY}/{repository}")
+        for root, dir, files in os.walk(f"{DIRECTORY}/{repository}"):
+            if "pom.xml" in files:
+                return root
+
 
 
     @staticmethod
@@ -127,20 +164,30 @@ class Validation(BaseValidation):
         """
         try:
             subprocess.run([
-                "mvn.cmd", "clean", "verify", "jacoco:report", "org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar",
+            #PER PROGETTI LPO STUDENTI
+                "mvn.cmd", "clean", "verify", "org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar",
                 f"-Dsonar.projectKey={param.get("project")}",
                 f"-Dsonar.projectName={param.get("name")}",
                 f"-Dsonar.host.url=http://localhost:9000",
                 f"-Dsonar.token={os.getenv("SONAR_LOCAL_API_TOKEN")}",
-                "-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
+
+
+            #PER PROGETTI APACHE CON JACOCO
+                #"mvn.cmd", "clean", "verify", "jacoco:report", "org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar",
+                #f"-Dsonar.projectKey={param.get("project")}",
+                #f"-Dsonar.projectName={param.get("name")}",
+                #f"-Dsonar.host.url=http://localhost:9000",
+                #f"-Dsonar.token={os.getenv("SONAR_LOCAL_API_TOKEN")}",
+                #"-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
 
             ],
 
-            #"mvn.cmd", "clean", "verify", "sonar:sonar",
-             #   f"-Dsonar.projectKey={param.get("project")}",
-              #  f"-Dsonar.projectName={param.get("name")}",
-               # f"-Dsonar.host.url=http://localhost:9000",
-                #f"-Dsonar.token={os.getenv("SONAR_LOCAL_API_TOKEN")}"
+            #PER PROGETTI APACHE SENZA JACOCO
+               #"mvn.cmd", "clean", "verify", "sonar:sonar",
+               #f"-Dsonar.projectKey={param.get("project")}",
+               #f"-Dsonar.projectName={param.get("name")}",
+               #f"-Dsonar.host.url=http://localhost:9000",
+               #f"-Dsonar.token={os.getenv("SONAR_LOCAL_API_TOKEN")}"
             #],
                 cwd=path,
                 check=True)
@@ -153,7 +200,7 @@ class Validation(BaseValidation):
     def elimina_da_Sonar(progetto_da_eliminare):
 
         param = {
-            "project": f"ProgettoApache_{progetto_da_eliminare}"
+            "project": f"Progetto_{progetto_da_eliminare}"
         }
         url = "http://localhost:9000/api/projects/delete"
 
@@ -231,8 +278,8 @@ class Validation(BaseValidation):
             # "http://localhost:9000/api/qualitygates/project_status?projectKey=progetto-java"  ULR per vedere se il progetto passa il Quality Gate
 
             param={
-                "component": f"ProgettoApache_{project}",
-                "metricKeys": "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
+                "component": f"Progetto_{project}",
+                "metricKeys": "ncloc,bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
                               "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
                               "blocker_violations,critical_violations"
             }
@@ -282,12 +329,17 @@ class Validation(BaseValidation):
                     #return
 
                 #print(f"L'analisi di {project} ha restituito: {response.json()}")
-
+                #print(response.json().get("component").get("measures")[2].get("value"))
                 #se il progetto è su SonarQube, ma lo scanner aveva dato problemi, allora quel progetto è rimasto su Sonar
                 #ma senza l'analisi statica del codice. Questo significa che è un progetto inutile che va tolto da Sonar (e in locale)
-                if not(response.json().get("component").get("measures")):
-                    print("Json vuoto")
-                    print("Elimina progetto da SonarQube e in locale")
+                if not(response.json().get("component").get("measures")) :
+                    #print("Json vuoto")
+                    print("Elimina progetto da SonarQube e in locale perchè non ha passato il SonarScanner")
+                    self.elimina_da_Sonar(project)
+                    self.elimina_da_locale(project)
+
+                elif int(response.json().get("component").get("measures")[8].get("value")) < 800:
+                    print("Elimina progetto da SonarQube e in locale perchè ha meno di 800 righe di codice")
                     self.elimina_da_Sonar(project)
                     self.elimina_da_locale(project)
 
@@ -300,16 +352,17 @@ class Validation(BaseValidation):
                  print(f"Errore di rete o altro problema nella richiesta: {e}")
                  return
 
-        print(pd.read_csv("attributes_before_refactoring").to_string())
 
 
 
-#validation = Validation()
-#validation.clone_progetti_Git()
-#validation.creazione_progetti_Sonar()
-#validation.risultati()
 
-param = {
+validation = Validation()
+validation.clone_progetti_Git()
+validation.creazione_progetti_Sonar()
+validation.risultati()
+print(pd.read_csv("attributes_before_refactoring").to_string())
+
+'''param = {
     "component": f"ProgettoApache_codec",
     "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
     # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
@@ -333,4 +386,4 @@ except requests.exceptions.HTTPError as e:
     print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_codec: {e}")
 
 except requests.exceptions.RequestException as e:
-    print(f"Errore di rete o altro problema nella richiesta: {e}")
+    print(f"Errore di rete o altro problema nella richiesta: {e}")'''
