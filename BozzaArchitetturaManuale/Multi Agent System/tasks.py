@@ -16,9 +16,12 @@ class CustomTask:
     def first_task(self, agente):
         return Task(
             agent=agente,
-            description="Make API call to find the worst class of the directory in term of quality attribute",
-            expected_output= "LOCAL PATH and FULL code",
+            description="Make API call to find the worst classes of the directory in term of quality attribute"
+                        "using a tool and passing {repository} as parameter of project key (then not full path, it's important, "
+                        "but only {repository}). once you finish iterating on one class, start the loop again with the other class",
+            expected_output= "LOCAL PATH and FULL code of the class",
             verbose=True,
+            #input_keys=["repository"]
 
         )
 
@@ -28,8 +31,12 @@ class CustomTask:
         return Task(
             agent=agente,
 
-            description="Analyze the {code} carefully and generate a clear, concise, and actionable prompt "
-                        "that will help another agent improve the *security* of the code. ",
+            description="Analyze the code of previous task carefully and create a precise and comprehensive prompt that "
+                        "instructs an AI system or automated tool to evaluate source code, focusing on backstory of agent and, if possible, on:"
+                        "- Bad Practices (e.g., duplicated code, improper naming, code smells)"
+                        "- Correctness (compliance with style and logic rules)"
+                        "- Critical Security Issues (e.g., injection vulnerabilities, insecure APIs, buffer overflows). ",
+
             #SENZA TEMPLATE del file l'agente che opera su questo task non sa che input prendere
             #con input_keys=["file_content"] l'agente si aspetta un input ma poi devo specificarlo da qualche parte nel task tramite template
             #se il placeholder non c'è, l'agente non lo vedrà mai
@@ -38,19 +45,19 @@ class CustomTask:
                             "as direct input for a language model.",
             verbose=True,
             context=[task0],
-            input_keys=["code"]
+            #input_keys=["code"]
         )
 
-    def third_task(self, agente, task1):
+    def third_task(self, agente, task0, task1):
         return Task(
             agent=agente,
-            description= "To refactor the {code}."
+            description= "To refactor the {code} using {prompt} as input."
                          #"You must stop refactoring code at first half."
                         ,
-            expected_output="Full Code refactoring",
+            expected_output="COMPLETE Code refactoring",
             verbose=True,
-            input_keys=["code"],
-            context=[task1]
+            input_keys=["code", "prompt"],
+            context=[task0, task1]
 
         )
 
@@ -59,7 +66,7 @@ class CustomTask:
     def fourth_task(self, agente, task0, task1):
         return Task(
             agent=agente,
-            description="The agent takes the {code} and the {prompt} as input and makes code refactoring, following these lines:"
+            description="The agent takes the code and the prompt of previous task (task0 and task1) as input and makes code refactoring, following these lines:"
                         "- preserve the structure, the number and ALL signatures of the original code's method"
                         "- preserve all the relationships with other classes (inheritance, "
                         "abstract classes, etc.)"
@@ -81,7 +88,7 @@ class CustomTask:
             expected_output="Full Code refactoring",
             verbose=True,
             context=[task0, task1],
-            input_keys=["code", "prompt"]
+            #input_keys=["code", "prompt"]
             #input_keys=["code"]
 
         )
@@ -92,22 +99,24 @@ class CustomTask:
         return Task(
             agent=utility_agent,
             description="Hai in input:"
-                        "- {class_path}: percorso LOCALE del file Java da aggiornare, fornito da task0"
-                        "- {refactored_code}: stringa con il codice Java refactorizzato, fornito da task2"
-                        "**Istruzioni**: " 
-                        "1. **Importa** il modulo `json`.  "
+                        "- class_path= percorso LOCALE del file Java da aggiornare, fornito da task0,"
+                        "- refactored_code=  stringa con TUTTO il codice Java refactorizzato, fornito da task2."
+                        "Istruzioni: " 
+                        "1. Usa il modulo `json`.  "
                         "2. Costruisci un dict Python:"
                            "payload = {"
-                             "class_path: {class_path},"
-                             "refactored_code: {refactored_code} "
+                             "class_path: class_path"
+                             "refactored_code: refactored_code"
+                        ""
                         "}"
-                        "e usa json.dumps(payload)"
-                        "Semplicemente poi chiama il tool `code_replace passando come parametri le i valori delle chiavi del payload json` "
-                        "e restituisci il suo output. Poi esegui SonarScanner nella root del progetto",
+                        "3. Serializza con json.dumps(payload, indent=2)"
+                        "4. Chiama il tool `code_replace passando come parametri i valori delle chiavi del payload json` "
+                        "e restituisci il suo output."
+                        "5. Esegui SonarScanner nella root del progetto",
 
 
-            expected_output="Nuova classe scritta nel path giusto e sonarscanner eseguito",
-            input_keys=["class_path", "refactored_code"],
+            expected_output="Code replace avvenuto con successo nel path giusto e sonarscanner eseguito.",
+            #input_keys=["class_path", "refactored_code"],
             context=[task0, task2],
             verbose=True
         )

@@ -16,12 +16,13 @@ import requests
 BASE_URL= "https://github.com"
 ORG_URL= "apache"
 TOPIC_URL= "commons"
-DIRECTORY= "./cloned_repos"
+DIRECTORY= "./cloned_repos_lpo"
 _FILE_REPORT = "attributes_before_refactoring"   #attributo privato
 
 #header che contiene il token di SonarQube, usato in tutte le chiamate API
 HEADER: Final[dict[str, str]] = {
-    "Authorization": f"Bearer {os.getenv("SONAR_LOCAL_API_TOKEN")}"
+    "Authorization": f"Bearer {os.getenv("SONAR_LOCAL_API_TOKEN")}",
+    #"Cache-Control": "no-cache"
 }
 
 header_git = {
@@ -318,14 +319,14 @@ class Validation(BaseValidation):
             try:
                 response = requests.get(url, headers=HEADER, params=param)
 
-                #response.raise_for_status()
+                response.raise_for_status()
                 #in questo caso 404 non mi deve generare l'eccezione: voglio esplicitamente controllare
                 #se la response sia 404 per eliminare il progetto
 
                 #SUPPONENDO che l'url sia corretto (se una metricKey è sbagliata ritorna 404 anche in quel caso) --> forse è da migliorare
-                if response.status_code == 404:  # se il progetto è mancante la chiamata restituirà 404
-                    print("Progetto mancante in SonarQube  --> allora va eliminato in locale")
-                    self.elimina_da_locale(project)
+                #if response.status_code == 404:  # se il progetto è mancante la chiamata restituirà 404
+                  #  print("Progetto mancante in SonarQube  --> allora va eliminato in locale")
+                  #  self.elimina_da_locale(project)
                     #return
 
                 #print(f"L'analisi di {project} ha restituito: {response.json()}")
@@ -348,6 +349,18 @@ class Validation(BaseValidation):
 
                             #TODo: QUI VA FATTO L'IF (MINING) CON LA SOGLIA MASSIMA DELLE METRICHE DEI PROGETTI ---> DA FARE PIU AVANTI
 
+            except requests.exceptions.HTTPError as e:
+                error_response = e.response.json()
+                error_msg = error_response.get("errors", [{}])[0].get("msg", "No message")
+                if "Component" in error_msg:
+                    print("Errore: Progetto non trovato.")
+                    self.elimina_da_locale(project)
+                elif "metric" in error_msg:
+                    print("Errore: MetricKey non valida.")
+                else:
+                    print(f"Errore sconosciuto: {error_msg}")
+                #print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_codec: {e}")
+
             except requests.exceptions.RequestException as e:
                  print(f"Errore di rete o altro problema nella richiesta: {e}")
                  return
@@ -357,13 +370,13 @@ class Validation(BaseValidation):
 
 
 validation = Validation()
-validation.clone_progetti_Git()
-validation.creazione_progetti_Sonar()
-validation.risultati()
-print(pd.read_csv("attributes_before_refactoring").to_string())
+#validation.clone_progetti_Git()
+#validation.creazione_progetti_Sonar()
+#validation.risultati()
+#print(pd.read_csv("attributes_before_refactoring").to_string())
 
 '''param = {
-    "component": f"ProgettoApache_codec",
+    "component": f"Progetto_gioco-oca-univaq-vmd",
     "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
     # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
     # "blocker_violations,critical_violations",
@@ -380,10 +393,25 @@ try:
     response.raise_for_status()
     print(json.dumps(response.json(), indent=4))
 
-    print(f"{DIRECTORY}/codec/{response.json().get("components")[0].get("path")}")
+    param2={
+        "key": response.json().get("components")[0].get("key")
+    }
+
+    code = requests.get(f"http://localhost:9000/api/sources/raw", headers=HEADER, params=param2)
+    #print(code)
+    #print(code.text)
+    project_root = f"{DIRECTORY}/gioco-oca-univaq-vmd"
+
+    for root, _, files in os.walk(project_root):
+        for file in files:
+            full_path = os.path.join(root, file)
+            if full_path.endswith(os.path.normpath(response.json()["components"][0]["path"])):
+                found_path = full_path
+                print(f"LOCAL PATH= {found_path}" + "\n\nCODE= " + code.text)
+                break
 
 except requests.exceptions.HTTPError as e:
-    print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_codec: {e}")
+    print(f"Errore HTTP ({e.response.status_code}), progetto non trovato: {e}")
 
 except requests.exceptions.RequestException as e:
     print(f"Errore di rete o altro problema nella richiesta: {e}")'''
