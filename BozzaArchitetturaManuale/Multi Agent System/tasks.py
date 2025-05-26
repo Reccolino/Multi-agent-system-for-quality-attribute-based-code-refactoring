@@ -98,27 +98,16 @@ class CustomTask:
     def code_replace_sonar_task(self, utility_agent, task0, task2):
         return Task(
             agent=utility_agent,
-            description="Hai in input:"
-                        "- class_path= percorso LOCALE del file Java da aggiornare, fornito da task0,"
-                        "- refactored_code=  stringa con TUTTO il codice Java refactorizzato, fornito da task2."
-                        "Istruzioni: " 
-                        "1. Usa il modulo `json`.  "
-                        "2. Costruisci un dict Python:"
-                           "payload = {"
-                             "class_path: class_path"
-                             "refactored_code: refactored_code"
-                        ""
-                        "}"
-                        "3. Serializza con json.dumps(payload, indent=2)"
-                        "4. Chiama il tool `code_replace passando come parametri i valori delle chiavi del payload json` "
-                        "e restituisci il suo output."
-                        "5. Esegui SonarScanner nella root del progetto",
+            description="Hai in input: "
+                        "class_path: percorso LOCALE del file Java da aggiornare, fornito da task0. Fai code replace li."
+                        "Inoltre, passa questo path al tool che fa SonarScanner",
 
 
             expected_output="Code replace avvenuto con successo nel path giusto e sonarscanner eseguito.",
             #input_keys=["class_path", "refactored_code"],
             context=[task0, task2],
-            verbose=True
+            verbose=True,
+            #output_file= "./ciao"
         )
 
 

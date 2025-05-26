@@ -6,12 +6,14 @@ import requests
 from crewai import Agent, LLM
 from crewai.tools.base_tool import tool
 from crewai_tools.tools.code_interpreter_tool.code_interpreter_tool import CodeInterpreterTool
+from crewai_tools.tools.file_writer_tool.file_writer_tool import FileWriterTool
 from dask.config import paths
 from litellm import completion
 from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
 from litellm.types.utils import ModelResponse
 
 from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
+code_replace = FileWriterTool()
 
 @tool("classe_peggiore")
 def classe_peggiore(project_key : str):
@@ -87,7 +89,7 @@ def classe_peggiore(project_key : str):
 
 
 
-@tool("code_replace")
+'''@tool("code_replace")
 def code_replace(class_path: str, refactored_code: str) -> str:
     """
     Sovrascrive il file Java in class_path con il contenuto refactored_code,
@@ -104,7 +106,7 @@ def code_replace(class_path: str, refactored_code: str) -> str:
         os.replace(tmp, class_path)
         return f"Code replace completato in {class_path}"
     except Exception as e:
-        return f"Errore durante code replace: {e}"
+        return f"Errore durante code replace: {e}"'''
 
 
 @tool("sonar_scanner")
@@ -249,11 +251,11 @@ class CustomAgent:
 
     def fourth_agent(self):
         return Agent(
-            name = "UpdaterAndScanner",
-            role = "DevOps e quality checker",
+            #name = "UpdaterAndScanner",
+            role = "Code replacer and quality checker",
             goal = "Scrive il codice refactorizzato nel file Java e avvia SonarScanner",
-            backstory="DevOps e quality checker",
-            tools = [code_replace, sonar_scanner],
+            backstory="Code replacer e quality checker",
+            tools = [code_replace,sonar_scanner],
             verbose = True,
             #input_keys = ["class_path", "refactored_code"],
             llm=self.llm

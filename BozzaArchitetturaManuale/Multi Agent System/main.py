@@ -12,7 +12,7 @@ from tasks import CustomTask
 
 
 
-def run():
+def run(repository):
 
     global response
 
@@ -49,13 +49,17 @@ def run():
    # }
     #source = StringKnowledgeSource(name="code", content=code_source)
 
+    input = {
+        "repository": repository
+    }
+
     #CREAZIONE CREW
     crew = Crew(
         #agents= [query_writer, code_refactor], nnposso omettere tanto nelle task già specifico gli agenti che eseguiranno quella task
         tasks= [task0,task1, task2, task3],
         process= Process.sequential,
         verbose=True,
-
+        #memory=True
         #embedder={
          #   "provider": "ollama",
           #      "config": {
@@ -66,7 +70,7 @@ def run():
     )
 
 
-    return crew.kickoff()
+    return crew.kickoff(inputs=input)
 
 
 
@@ -74,18 +78,16 @@ def run():
 if __name__ == '__main__':
     start_time= time.time()
 
-    result = run()
-    print(result)
+    for repository in os.listdir(DIRECTORY):
+
+        if repository.startswith("."):  # come cartella .git
+            continue
+        result = run(repository)
+        print(result)
+
+        #classe = classe_peggiore(repository)'''
 
     end_time = time.time()- start_time
     print(f"Tempo di esecuzione = {end_time}")
-
-'''for repository in os.listdir(DIRECTORY):
-
-    if repository.startswith("."):  # come cartella .git
-        continue
-
-    #classe = classe_peggiore(repository)'''
-
 
 

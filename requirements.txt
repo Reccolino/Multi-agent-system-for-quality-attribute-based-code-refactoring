@@ -1,0 +1,15 @@
+# core frameworks
+crewai~=0.121.0
+crewai-tools==0.38.1
+fastapi
+langchain
+cohere
+Instructor
+# …altri tuoi top-level
+
+yaml~=0.2.5
+pyyaml~=6.0.1
+pandas~=2.2.2
+requests~=2.32.3
+gitpython~=3.1.43
+litellm~=1.68.0
