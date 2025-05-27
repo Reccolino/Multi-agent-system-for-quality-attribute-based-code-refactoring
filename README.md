@@ -1,6 +1,6 @@
-# {{crew_name}} Crew
+# RefactorCrew
 
-Welcome to the {{crew_name}} Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+Welcome to the  RefactorCrew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
 
 ## Installation
 
@@ -21,7 +21,7 @@ crewai install
 
 ### Customizing
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+**Add your `MISTRAL_API_KEY` into the `.env` file**
 
 - Modify `src/multi_agent_system_flow/config/agents.yaml` to define your agents
 - Modify `src/multi_agent_system_flow/config/tasks.yaml` to define your tasks
