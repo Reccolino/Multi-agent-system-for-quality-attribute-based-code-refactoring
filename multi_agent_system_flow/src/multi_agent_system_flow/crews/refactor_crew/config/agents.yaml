@@ -15,8 +15,6 @@ query_writer:
                  act as the first line of defense in code validation.
 
 
-      #input_keys=["quality_attributes_to_improve"],
-
 
 
 code_refactor:
@@ -50,13 +48,8 @@ code_refactor:
             Software engineer with 50 years of experience in Java development. Specialized in refactoring,
             security, performance tuning, and design patterns. 
             Has worked with Maven and static analysis tools such as PMD, Checkstyle, and SonarQube.
-      #input_keys=["file_content"],
-      ##tools= [search_tool]  posso inserire un tool di ricerca su Google
-      #knowledge_sources  per migliorare ancora di piu la conscenza di Java ???
-
-      # possiamo specializzare questo agente assegnandogli il tool di ricerca web (importandolo da librerie di CrewAI o di LangChain)
-      # questo significa che l'agente ha la "skill" di fare ricerche sul web e, quindi, non rispondere solamente in base alle sue conoscenze
-
+      
+      
 
 
 utility_agent:

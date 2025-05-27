@@ -2,13 +2,49 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/beanutils" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/codec" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/compress" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/configuration" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/lang" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/logging" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/validator" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/cactoos" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-beanutils" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-bsf" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-codec" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-compress" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-configuration" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-dbcp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-dbutils" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-digester" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-email" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-exec" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-fileupload" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-geometry" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-graph" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-imaging" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-jci" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-jcs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-jelly" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-jexl" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-jxpath" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-lang" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-logging" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-math" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-net" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-numbers" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-ognl" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-pool" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-rdf" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-rng" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-statistics" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-text" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-validator" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/commons-vfs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/BozzaArchitetturaManuale/cloned_repos/xmlgraphics-commons" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-fsociety" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-let" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-rasputeam" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-the-debuggers" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-untitled-goose-alliance" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-vmd" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq-monopoliduoproject" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq-progettolpoantonacci" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq2-daltrio" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq2-polimono" vcs="Git" />
   </component>
 </project>

@@ -16,16 +16,16 @@ from crewai_tools.tools.file_writer_tool.file_writer_tool import FileWriterTool
 
 
 @tool("sonar_scanner")
-def sonar_scanner(class_path: str):
+def sonar_scanner(path_class: str):
     """
     Esegue comandi Maven e di SonarScanner nella root del progetto
     :param class_path:
     :return:
     """
-    project_key = class_path.split('/')[2]
+    project_key = path_class.split('/')[2]
     print("PROJECT KEYYYY "+project_key)
     #QUESTO SOLO PER PROGETTI LPO
-    directory_pom = class_path.split('/')[3]
+    directory_pom = path_class.split('/')[3]
     print("DIRECTORY POMMMM"+ directory_pom)
     try:
         subprocess.run([
@@ -85,6 +85,7 @@ class RefactorCrew():
             config=self.agents_config['code_refactor'],  # type: ignore[index]
             verbose=True,
             llm=self.llm,
+            reasoning=True
         )
 
     @agent
@@ -93,7 +94,6 @@ class RefactorCrew():
             config=self.agents_config['utility_agent'],  # type: ignore[index]
             verbose=True,
             llm=self.llm,
-            tools=[code_replace, sonar_scanner]
         )
 
     # To learn more about structured task outputs,
@@ -120,7 +120,8 @@ class RefactorCrew():
         return Task(
             config=self.tasks_config['task3'],  # type: ignore[index]
             #context=[self.task2],
-            verbose=True
+            verbose=True,
+            tools=[code_replace, sonar_scanner]
         )
 
     @crew
@@ -134,5 +135,4 @@ class RefactorCrew():
             tasks=self.tasks, # Automatically created by the @task decorator
             process=Process.sequential,
             verbose=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )

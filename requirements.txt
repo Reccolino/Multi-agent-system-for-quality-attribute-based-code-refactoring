@@ -1,5 +1,5 @@
 # core frameworks
-crewai~=0.121.0
+crewai~=0.119.0
 crewai-tools==0.38.1
 fastapi
 langchain

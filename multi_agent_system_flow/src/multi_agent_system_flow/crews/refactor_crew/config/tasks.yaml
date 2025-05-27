@@ -6,17 +6,11 @@ task1:
                 - Correctness (compliance with style and logic rules)
                 - Critical Security Issues (e.g., injection vulnerabilities, insecure APIs, buffer overflows). 
 
-    #SENZA TEMPLATE del file l'agente che opera su questo task non sa che input prendere
-    #con input_keys=["file_content"] l'agente si aspetta un input ma poi devo specificarlo da qualche parte nel task tramite template
-    #se il placeholder non c'è, l'agente non lo vedrà mai
     expected_output: >
                     A single, self-contained prompt in natural language, written in English, that clearly instructs 
                     another AI agent on how to improve the security of the given code. It should be suitable to use 
                     as direct input for a language model.
     agent: query_writer
-    #verbose: True
-    #context: [task1]
-    #input_keys=["code"]
 
 
 task2:
@@ -52,7 +46,7 @@ task3:
 
     description: >
             Fai code replace in {path_class} del codice refattorizzato.
-            Inoltre, passa {path_class} al tool che fa SonarScanner
+            Inoltre, passa lo stesso {path_class} al tool che fa SonarScanner
 
 
     expected_output: >

@@ -6,7 +6,7 @@ from typing import List, Optional
 import requests
 from pydantic import BaseModel
 
-from crewai.flow.flow import Flow, listen, start, or_
+from crewai.flow.flow import Flow, listen, start, or_, router
 
 from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.refactor_crew.refactor_crew import RefactorCrew
@@ -15,6 +15,8 @@ from multi_agent_system_flow.src.multi_agent_system_flow.crews.refactor_crew.ref
 class ExampleFlow(BaseModel):
     project_list: List[str] = []
     current_project: Optional[int] = 0
+    current_class: Optional[int] = 0
+    classi: List[dict] = []
     path_class: str = ""
     code_class: str = ""
 
@@ -23,20 +25,46 @@ class OriginalFlow(Flow[ExampleFlow]):
     @start()
     def init(self):
         self.state.project_list = [repository for repository in os.listdir("./cloned_repos_lpo")]
+        print(self.state.project_list)
+        #return self.state.project_list[self.state.current_project]
 
-        return self.state.project_list[self.state.current_project]
+    @router(or_("init", "classes_for_project", "refactor_code"))
+    def router(self, _=None):
+        """
+        Il router guarda lo stato e restituisce il nome del prossimo metodo da eseguire.
+        """
+        #Se non ho ancora caricato le classi per un progetto
+        if not self.state.classi:
+            return "percorso_progetto"
+
+        #Se ho ancora classi residue per questo progetto
+        if self.state.current_class < len(self.state.classi):
+            return "percorso_classe"
+
+        #Ho processato tutte le classi di questo progetto:
+        #passo al prossimo progetto (se esiste) o termino
+        self.state.current_project += 1
+        if self.state.current_project < len(self.state.project_list):
+            # resetto le classi per il nuovo progetto
+            self.state.classi = []
+            self.state.current_class = 0
+            return "percorso_progetto"
+        else:
+            print("Tutti i progetti sono stati elaborati.")
+            #return None
+
 
     #l'or puo dare risultati indesiderati. Forse meglio usare @router e gestire meglio il flusso
-    @listen(or_("init", "refactor_code"))
-    def classe_peggiore(self, _):
+    @listen("percorso_progetto")
+    def classes_for_project(self):
         """
             Restituisce: il path della classe con peggior security_rating via SonarQube e il codice di quella classe .
             Effettua una GET su /api/measures/component_tree e ordina per security_rating e poi effettua un GET api/sources/raw per restituire il codice .
             """
-        project = self.state.project_list[self.state.current_project]
+        #project = self.state.project_list[self.state.current_project]
 
         param = {
-            "component": f"Progetto_{project}",
+            "component": f"Progetto_{self.state.project_list[self.state.current_project]}",
             "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
             # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
             # "blocker_violations,critical_violations",
@@ -52,10 +80,25 @@ class OriginalFlow(Flow[ExampleFlow]):
 
             response.raise_for_status()
             print(json.dumps(response.json(), indent=4))
+            self.state.classi = response.json().get("components")
+            #return "router"
 
+        except requests.exceptions.HTTPError as e:
+            print(f"Errore HTTP ({e.response.status_code}) durante la ricerca: {e}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Errore di rete o altro problema nella richiesta: {e}")
+        # "http://localhost:9000/api/qualitygates/project_status?projectKey=progetto-java"  ULR per vedere se il progetto passa il Quality Gate
+
+
+
+    @listen("percorso_classe")
+    def esec_class(self):
+            #self.state.current_class = 0
             # http://localhost:9000/api/sources/raw necessita della key del progetto come parametro (query string)  ==> la prendo dal JSON
+            classe_attuale = self.state.classi[self.state.current_class]
             param2 = {
-                "key": response.json().get("components")[0].get("key")
+                "key": classe_attuale.get("key")
             }
 
             code = requests.get("http://localhost:9000/api/sources/raw", headers=HEADER, params=param2)
@@ -73,16 +116,17 @@ class OriginalFlow(Flow[ExampleFlow]):
                       encoding="utf-8") as f:
                  code = f.read()'''
 
-            project_root = f"{DIRECTORY}/{project}"
+            project_root = f"{DIRECTORY}/{self.state.project_list[self.state.current_project]}"
 
             # PER PROGETTI LPO BISOGNA TROVARE PATH CORRETTO PERCHE NON è IMMEDIATO COME PROGETTI APACHE
             for root, _, files in os.walk(project_root):
                 for file in files:
                     full_file_path = os.path.join(root, file)
                     # uso normpath perche il json restituisce slash cosi: \ . Invece a me serve il path con slash cosi /
-                    if full_file_path.endswith(os.path.normpath(response.json()["components"][0]["path"])):
+                    if full_file_path.endswith(os.path.normpath(self.state.classi[self.state.current_class].get("path"))):
                         self.state.path_class = full_file_path
                         print(f"LOCAL PATH: {self.state.path_class}" + f"\n\nCODE:\n  + {self.state.code_class}")
+
                         return {
                             "path_class":self.state.path_class,
                             "code_class":self.state.code_class
@@ -92,16 +136,10 @@ class OriginalFlow(Flow[ExampleFlow]):
             # l'agente ogni volta mi eseguirà sempre la prima classe, quindi, probabilmente, dovrò gestire il fatto che una classe
             # è stata già esaminata (è stato fatto code refactoring, sia che sia andato a buon fine che non)
             # e che quindi si deve passare alla classe successiva
-        except requests.exceptions.HTTPError as e:
-            print(f"Errore HTTP ({e.response.status_code}) durante la ricerca: {e}")
-
-        except requests.exceptions.RequestException as e:
-            print(f"Errore di rete o altro problema nella richiesta: {e}")
-        # "http://localhost:9000/api/qualitygates/project_status?projectKey=progetto-java"  ULR per vedere se il progetto passa il Quality Gate
 
 
 
-    @listen("classe_peggiore")
+    @listen("esec_class")
     def refactor_code(self, data):
         path_class = data["path_class"]
         code_class = data["code_class"]
@@ -114,15 +152,7 @@ class OriginalFlow(Flow[ExampleFlow]):
         except Exception as e:
             print(f"Errore durante il kickoff del crew: {e}")
 
-
-        self.state.current_project += 1
-        if self.state.current_project < len(self.state.project_list):
-            next_project = self.state.project_list[self.state.current_project]
-            return self.classe_peggiore(next_project)
-        else:
-            print("Tutti i progetti sono stati elaborati.")
-            return None
-        # return result.raw
+        self.state.current_class +=1
 
 
 def kickoff():
