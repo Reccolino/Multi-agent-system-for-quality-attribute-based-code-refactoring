@@ -1,0 +1,60 @@
+task1:
+    description: >
+                Analyze the {code_class} carefully and create a precise and comprehensive prompt that 
+                instructs an AI system or automated tool to evaluate source code, focusing on backstory of agent and, if possible, on:
+                - Bad Practices (e.g., duplicated code, improper naming, code smells)
+                - Correctness (compliance with style and logic rules)
+                - Critical Security Issues (e.g., injection vulnerabilities, insecure APIs, buffer overflows). 
+
+    expected_output: >
+                    A single, self-contained prompt in natural language, written in English, that clearly instructs 
+                    another AI agent on how to improve the security of the given code. It should be suitable to use 
+                    as direct input for a language model.
+    agent: query_writer
+
+
+task2:
+
+    description: >
+          The agent takes the {code_class} and the prompt of previous task (task1) as input and makes code refactoring, following these lines:
+          - preserve the structure, the number and ALL signatures of the original code's method
+          - preserve all the relationships with other classes (inheritance, abstract classes, etc.)
+          - preserve ALL number and signature of constructors and the names of classes. THIS IS IMPORTANT !! 
+          - do not drastically changes of the code,but improve it only where necessary 
+          - keep absolutely the licenses
+          - not include test cases
+          - do not syntax errors
+          - if necessary, remove unnecessary comments so that I can fit the entire code you 
+          generate for me without running into model token limits
+    #description="You will be given code snippets or segments for improvement. "
+    #           "Your task is to interact with the user when necessary to clarify context or requirements. "
+    #          "Then, suggest clear, maintainable refactorings that preserve original functionality. "
+    #         "Prioritize clarity and maintainability. When applicable, apply well-known design patterns. "
+    #        "Optimize performance only if it doesn't compromise readability or introduce premature "
+    #       "optimization issues. Identify and address potential errors and edge cases for robustness. "
+    #      "For every improvement or change, provide concise, informative explanations detailing why"
+    #     " the change is beneficial",
+    expected_output: >
+        Full Code refactoring
+    context:
+        - task1
+    agent: code_refactor
+
+
+
+task3:
+
+    description: >
+            Fai code replace in {path_class} del codice refattorizzato.
+            Inoltre, passa lo stesso {path_class} al tool che fa SonarScanner
+
+
+    expected_output: >
+            Code replace avvenuto con successo nel path giusto e sonarscanner eseguito.
+
+    context:
+      - task2
+    agent: utility_agent
+
+
+

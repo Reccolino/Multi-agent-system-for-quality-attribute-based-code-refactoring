@@ -4,3 +4,4 @@ lib/
 .DS_Store
 .db
 .idea
+./cloned_repos
