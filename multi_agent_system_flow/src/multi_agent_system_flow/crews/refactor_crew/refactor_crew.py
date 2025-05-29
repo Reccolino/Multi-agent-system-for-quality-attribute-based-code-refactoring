@@ -51,12 +51,13 @@ def sonar_scanner(path_class: str):
         return RefactoringVerificator(valid=False, errors=e.stdout)
 
 
-code_replace = FileWriterTool()
+code_replace = FileWriterTool()      #tool che fa code replace
 
 
 class RefactoringVerificator(BaseModel):
     errors: Optional[str]
     valid: bool
+
 
 @CrewBase
 class RefactorCrew:

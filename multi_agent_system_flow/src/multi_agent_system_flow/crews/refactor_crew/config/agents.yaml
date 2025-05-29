@@ -55,8 +55,10 @@ code_refactor:
 utility_agent:
       #name = "UpdaterAndScanner",
       role: >
-          Quality checker e code replace
+          Code refactoring enforcer e SonarQube verifier
       goal: >
          Scrive il codice refactorizzato nel {path_class} e avvia SonarScanner
       backstory: >
-          Code replacer e quality checker
+         Esperto di automazione CI/CD, si occupa di assicurare che ogni modifica al codice 
+         sia conforme agli standard di qualità, usando SonarScanner per l’analisi statica.
+         È anche responsabile della scrittura sicura nel filesystem.

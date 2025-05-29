@@ -10,25 +10,30 @@ from crewai.flow.flow import Flow, listen, start, or_, router
 from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.refactor_crew.refactor_crew import RefactorCrew
 
+TENTATIVI_MAX: int = 3
 
 class ExampleFlow(BaseModel):
-    project_list: List[str] = []
-    current_project: Optional[int] = 0
-    current_class: Optional[int] = 0
-    classi: List[dict] = []
-    path_class: str = ""
-    code_class: str = ""
-    errors: str = ""
-    validate: str = ""
-    tentativi: Optional[int] = 0
+    project_list: List[str] = []      #lista di progetti
+    current_project: Optional[int] = 0    #serve a indicare quale progetto si sta elaborando
+    classi: List[dict] = []     #lista di classi di un progetto
+    current_class: Optional[int] = 0    #serve a indicare quale classe del progetto si sta facendo refactoring
+    path_class: str = ""     #path della classe da passare alla Crew per poter fare code replace e per poter eseguire sonarScanner
+    code_class: str = ""     #codice della classe da passare alla Crew per poter fare refactoring
+    errors: str = ""         #errori (di compilazione o altri) da passare alla Crew per indirizzare agente a non commetterli
+    validate: str = ""       #flag che verifica se il comando da terminale per una classe ha restituito Build Success o Build Failure
+    tentativi: Optional[int] = 0    #contatore per tenere traccia del numero di tentativi su una singola classe
+
 
 class OriginalFlow(Flow[ExampleFlow]):
 
     @start()
     def init(self):
+        """
+        Metodo che carica tutti i progetti nella project_list. Da qui si potrà accedere ai singoli progetti e alle classi dei progetti
+        """
         self.state.project_list = [repository for repository in os.listdir("./cloned_repos_lpo")]
         print(self.state.project_list)
-        #return self.state.project_list[self.state.current_project]
+
 
     @router(or_("init", "classes_for_project", "refactor_code"))
     def router(self, _=None):
@@ -36,17 +41,15 @@ class OriginalFlow(Flow[ExampleFlow]):
         Il router guarda lo stato e restituisce il nome del prossimo metodo da eseguire.
         """
 
-
         #Se non ho ancora caricato le classi per un progetto
         if not self.state.classi:
             return "percorso_progetto"
 
-        #self.state.validate = ""
-        #self.state.errors = ""
 
         #Se ho ancora classi residue per questo progetto
         if self.state.current_class < len(self.state.classi):
             return "percorso_classe"
+
 
         #Ho processato tutte le classi di questo progetto:
         #passo al prossimo progetto (se esiste) o termino
@@ -58,17 +61,16 @@ class OriginalFlow(Flow[ExampleFlow]):
             return "percorso_progetto"
         else:
             print("Tutti i progetti sono stati elaborati.")
-            #return None
 
 
-    #l'or puo dare risultati indesiderati. Forse meglio usare @router e gestire meglio il flusso
+
+
     @listen("percorso_progetto")
     def classes_for_project(self):
         """
             Restituisce: il path della classe con peggior security_rating via SonarQube e il codice di quella classe .
-            Effettua una GET su /api/measures/component_tree e ordina per security_rating e poi effettua un GET api/sources/raw per restituire il codice .
-            """
-        #project = self.state.project_list[self.state.current_project]
+            Effettua una GET su /api/measures/component_tree e ordina per security_rating  .
+        """
 
         param = {
             "component": f"Progetto_{self.state.project_list[self.state.current_project]}",
@@ -88,8 +90,6 @@ class OriginalFlow(Flow[ExampleFlow]):
             response.raise_for_status()
             print(json.dumps(response.json(), indent=4))
             self.state.classi = response.json().get("components")
-            #self.state.current_project = 0
-            #return "router"
 
         except requests.exceptions.HTTPError as e:
             print(f"Errore HTTP ({e.response.status_code}) durante la ricerca: {e}")
@@ -102,7 +102,11 @@ class OriginalFlow(Flow[ExampleFlow]):
 
     @listen("percorso_classe")
     def esec_class(self):
-            #self.state.current_class = 0
+        """
+        Effettua un GET api/sources/raw per restituire il codice e il path da refattorizzare di una classe specifica
+        """
+        if self.state.tentativi < TENTATIVI_MAX:   #cosi evito di rifare chiamata api inutilmente
+
             # http://localhost:9000/api/sources/raw necessita della key del progetto come parametro (query string)  ==> la prendo dal JSON
             classe_attuale = self.state.classi[self.state.current_class]
             param2 = {
@@ -110,9 +114,9 @@ class OriginalFlow(Flow[ExampleFlow]):
             }
 
             code = requests.get("http://localhost:9000/api/sources/raw", headers=HEADER, params=param2)
-            # print(code)
-            # print(code.text)
             self.state.code_class = code.text
+
+
             # COSI FACENDO NON INCORRO IN ERRORI DEL TIPO:
             # l'agente mi fa un refactoring errato (cioè che SonarScanner restituisce Build Failure e, quindi, il codice non viene aggiornato),
             # ma il code replace va a buon fine. Allora alla prossima esecuzione il codice in input
@@ -136,45 +140,36 @@ class OriginalFlow(Flow[ExampleFlow]):
                         print(f"LOCAL PATH: {self.state.path_class}" + f"\n\nCODE:\n  + {self.state.code_class}")
 
 
-            # PROBLEMA: è da gestire le classi
-            # nel senso, se si avvia esecuzione e si vogliono far restituire, per esempio, 20 classi per progetto dalla prima chiamata,
-            # l'agente ogni volta mi eseguirà sempre la prima classe, quindi, probabilmente, dovrò gestire il fatto che una classe
-            # è stata già esaminata (è stato fatto code refactoring, sia che sia andato a buon fine che non)
-            # e che quindi si deve passare alla classe successiva
-
-
 
     @listen("esec_class")
     def refactor_code(self):
-        #path_class = data["path_class"]
-        #code_class = data["code_class"]
 
-        print(f"Elaborando progetto: {self.state.project_list[self.state.current_project]}")
+        print(f"\nElaborando progetto: {self.state.project_list[self.state.current_project]}")
+        print(f"\nClasse: {self.state.classi[self.state.current_class]}")
 
-        if self.state.tentativi < 3:    #questo posso farlo anche nel router (anzi forse la devo farlo)
-            #self.state.errors = ""
+        if self.state.tentativi < TENTATIVI_MAX:    #questo posso farlo anche nel router (anzi forse la devo farlo)
+
             result = RefactorCrew().crew().kickoff(inputs={"code_class": self.state.code_class, "path_class": self.state.path_class, "errors": self.state.errors})
 
-            self.state.validate= result["valid"]
-            self.state.errors= result["errors"]
+            self.state.validate= result["valid"]   #prendo il valore di valid restituito dall'output_pydantic della Crew
+            self.state.errors= result["errors"]    #prendo il valore di errors restituito dall'output_pydantic della Crew
 
             print(f"VALIDATE: +{self.state.validate}")
             print(f"ERRORS: +{self.state.errors}")
 
             if self.state.validate:  #vuol dire Build Success
-                self.state.current_class += 1
-                #return "router"
-            else:
-                #RefactorCrew().crew().kickoff(inputs={"code_class": code_class, "path_class": path_class, "errors": self.state.errors})
-                self.state.tentativi += 1
-                #return "refactor_code"
-        else:
+                self.state.current_class += 1   #passa alla prossima classe
+
+            else:  #Build Failure (errori di compilazione o altro tipo di errore)
+                self.state.tentativi += 1   #aumenta numero di tentativi e riesegui il refactoring su stessa classe
+
+        else:    #arrivato a N tentativi
 
             self.state.current_class +=1   #passa avanti con la classe
             self.state.validate = ""   #riazzero validate
             self.state.errors = ""   #riazzero errors
-            self.state.tentativi = 0 #riazzero tentativi per la prossima classe
-            #return "router"   #devo specificarlo altrimenti c'è il rischio che mi torni ancora a refactor_code, ma "data" non sa cos'è
+            self.state.tentativi = 0   #riazzero tentativi per la prossima classe
+
 
 
 

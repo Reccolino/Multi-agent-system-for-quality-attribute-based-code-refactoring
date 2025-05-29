@@ -1,5 +1,5 @@
 task1:
-    description: >
+    description: |
                 Analyze the {code_class} carefully and create a precise and comprehensive prompt that 
                 instructs an AI system or automated tool to evaluate source code, focusing on backstory of agent and, if possible, on:
                 - Bad Practices (e.g., duplicated code, improper naming, code smells)
@@ -14,17 +14,20 @@ task1:
 
 
 task2:
-    description: >
-          The agent takes the {code_class} and the prompt of previous task (task1) as input and makes code refactoring, following these lines:
+    #description: >
+     #     To refactor the code, without errors {errors} following the input of previous task
+    description: |
+           The agent takes the code and the prompt of previous task (task1) as input and makes code refactoring, following these lines:
           - preserve the structure, the number and ALL signatures of the original code's method
           - not make errors {errors}
           - preserve all the relationships with other classes (inheritance, abstract classes, etc.)
           - preserve ALL number and signature of constructors and the names of classes. THIS IS IMPORTANT !! 
           - do not drastically changes of the code,but improve it only where necessary 
-          - not change the comments (if they are comments there is a reason)
+          - keep ALL comments (if some lines are comments there is a reason)
           - keep absolutely the licenses
           - not include test cases
           - do not syntax errors
+          
 
     #description="You will be given code snippets or segments for improvement. "
     #           "Your task is to interact with the user when necessary to clarify context or requirements. "
@@ -57,7 +60,7 @@ task3:
 task4:
     description: >
             Passa {path_class} al tool sonar_scanner ed esegui comandi da terminale
-    expected_output: >
+    expected_output: |
             Dopo aver usato SonarScanner, restituisci: 
             - Valid: True/False based on errors 
             - Errors: if Valid is True, write the compilation errors (or other type of errors)
