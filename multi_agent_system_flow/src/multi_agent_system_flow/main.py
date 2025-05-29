@@ -18,6 +18,9 @@ class ExampleFlow(BaseModel):
     classi: List[dict] = []
     path_class: str = ""
     code_class: str = ""
+    errors: str = ""
+    validate: str = ""
+    tentativi: Optional[int] = 0
 
 class OriginalFlow(Flow[ExampleFlow]):
 
@@ -32,9 +35,14 @@ class OriginalFlow(Flow[ExampleFlow]):
         """
         Il router guarda lo stato e restituisce il nome del prossimo metodo da eseguire.
         """
+
+
         #Se non ho ancora caricato le classi per un progetto
         if not self.state.classi:
             return "percorso_progetto"
+
+        #self.state.validate = ""
+        #self.state.errors = ""
 
         #Se ho ancora classi residue per questo progetto
         if self.state.current_class < len(self.state.classi):
@@ -80,6 +88,7 @@ class OriginalFlow(Flow[ExampleFlow]):
             response.raise_for_status()
             print(json.dumps(response.json(), indent=4))
             self.state.classi = response.json().get("components")
+            #self.state.current_project = 0
             #return "router"
 
         except requests.exceptions.HTTPError as e:
@@ -126,10 +135,7 @@ class OriginalFlow(Flow[ExampleFlow]):
                         self.state.path_class = full_file_path
                         print(f"LOCAL PATH: {self.state.path_class}" + f"\n\nCODE:\n  + {self.state.code_class}")
 
-                        return {
-                            "path_class":self.state.path_class,
-                            "code_class":self.state.code_class
-                        }
+
             # PROBLEMA: è da gestire le classi
             # nel senso, se si avvia esecuzione e si vogliono far restituire, per esempio, 20 classi per progetto dalla prima chiamata,
             # l'agente ogni volta mi eseguirà sempre la prima classe, quindi, probabilmente, dovrò gestire il fatto che una classe
@@ -139,19 +145,40 @@ class OriginalFlow(Flow[ExampleFlow]):
 
 
     @listen("esec_class")
-    def refactor_code(self, data):
-        path_class = data["path_class"]
-        code_class = data["code_class"]
+    def refactor_code(self):
+        #path_class = data["path_class"]
+        #code_class = data["code_class"]
 
         print(f"Elaborando progetto: {self.state.project_list[self.state.current_project]}")
 
-        try:
-            result = RefactorCrew().crew().kickoff(inputs={"code_class": code_class, "path_class": path_class})
-            print(result.raw)
-        except Exception as e:
-            print(f"Errore durante il kickoff del crew: {e}")
+        if self.state.tentativi < 3:    #questo posso farlo anche nel router (anzi forse la devo farlo)
+            #self.state.errors = ""
+            result = RefactorCrew().crew().kickoff(inputs={"code_class": self.state.code_class, "path_class": self.state.path_class, "errors": self.state.errors})
 
-        self.state.current_class +=1
+            self.state.validate= result["valid"]
+            self.state.errors= result["errors"]
+
+            print(f"VALIDATE: +{self.state.validate}")
+            print(f"ERRORS: +{self.state.errors}")
+
+            if self.state.validate:  #vuol dire Build Success
+                self.state.current_class += 1
+                #return "router"
+            else:
+                #RefactorCrew().crew().kickoff(inputs={"code_class": code_class, "path_class": path_class, "errors": self.state.errors})
+                self.state.tentativi += 1
+                #return "refactor_code"
+        else:
+
+            self.state.current_class +=1   #passa avanti con la classe
+            self.state.validate = ""   #riazzero validate
+            self.state.errors = ""   #riazzero errors
+            self.state.tentativi = 0 #riazzero tentativi per la prossima classe
+            #return "router"   #devo specificarlo altrimenti c'è il rischio che mi torni ancora a refactor_code, ma "data" non sa cos'è
+
+
+
+
 
 
 def kickoff():

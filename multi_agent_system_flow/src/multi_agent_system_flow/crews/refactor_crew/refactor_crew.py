@@ -2,12 +2,13 @@ import os
 import subprocess
 
 from crewai import Agent, Crew, Process, Task, LLM
-from crewai.project import CrewBase, agent, crew, task
+from crewai.project import CrewBase, agent, crew, task, output_pydantic
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from typing import List
+from typing import List, Optional
 
 from crewai.tools import tool
 from crewai_tools.tools.file_writer_tool.file_writer_tool import FileWriterTool
+from pydantic import BaseModel
 
 
 # If you want to run a snippet of code before or after the crew starts,
@@ -15,18 +16,18 @@ from crewai_tools.tools.file_writer_tool.file_writer_tool import FileWriterTool
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
 
-@tool("sonar_scanner")
+@tool("sonar_scanner", result_as_answer=True)
 def sonar_scanner(path_class: str):
     """
     Esegue comandi Maven e di SonarScanner nella root del progetto
-    :param class_path:
-    :return:
+    :param path_class:
+    :return: True if Build Success, False if Build Failure with errors
     """
     project_key = path_class.split('/')[2]
-    print("PROJECT KEYYYY "+project_key)
+    print("PROJECT KEY:  "+project_key)
     #QUESTO SOLO PER PROGETTI LPO
     directory_pom = path_class.split('/')[3]
-    print("DIRECTORY POMMMM"+ directory_pom)
+    print("DIRECTORY POM:  "+ directory_pom)
     try:
         subprocess.run([
             "mvn.cmd", "clean", "verify", "org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar",
@@ -40,18 +41,25 @@ def sonar_scanner(path_class: str):
 
             #QUESTO SOLO PER PROGETTI LPO
             cwd=os.path.join("cloned_repos_lpo", project_key, directory_pom),
-
+            capture_output=True,
+            text=True,
             check=True
         )
-    except subprocess.CalledProcessError:
-        print("Errore durante l'analisi")
+        return RefactoringVerificator(valid=True)
+
+    except subprocess.CalledProcessError as e:
+        return RefactoringVerificator(valid=False, errors=e.stdout)
 
 
 code_replace = FileWriterTool()
 
 
+class RefactoringVerificator(BaseModel):
+    errors: Optional[str]
+    valid: bool
+
 @CrewBase
-class RefactorCrew():
+class RefactorCrew:
     """RefactorCrew crew"""
 
     agents: List[BaseAgent]
@@ -77,6 +85,7 @@ class RefactorCrew():
             config=self.agents_config['query_writer'],  # type: ignore[index]
             verbose=True,
             llm=self.llm,
+            #memory=True
         )
 
     @agent
@@ -85,7 +94,8 @@ class RefactorCrew():
             config=self.agents_config['code_refactor'],  # type: ignore[index]
             verbose=True,
             llm=self.llm,
-            reasoning=True
+            reasoning=True,
+            #memory=True
         )
 
     @agent
@@ -93,7 +103,8 @@ class RefactorCrew():
         return Agent(
             config=self.agents_config['utility_agent'],  # type: ignore[index]
             verbose=True,
-            llm=self.llm,
+            llm=self.llm
+
         )
 
     # To learn more about structured task outputs,
@@ -119,9 +130,20 @@ class RefactorCrew():
     def task3(self) -> Task:
         return Task(
             config=self.tasks_config['task3'],  # type: ignore[index]
+            # context=[self.task2],
+            verbose=True,
+            tools=[code_replace],
+            #output_pydantic=RefactoringVerificator
+        )
+
+    @task
+    def task4(self) -> Task:
+        return Task(
+            config=self.tasks_config['task4'],  # type: ignore[index]
             #context=[self.task2],
             verbose=True,
-            tools=[code_replace, sonar_scanner]
+            tools=[sonar_scanner],
+            output_pydantic=RefactoringVerificator
         )
 
     @crew
@@ -135,4 +157,9 @@ class RefactorCrew():
             tasks=self.tasks, # Automatically created by the @task decorator
             process=Process.sequential,
             verbose=True,
+            #memory=True,
+            #embedder={
+             #   "provider": "ollama",
+              #  "config":{"model": "nomic-embed-text:latest"}
+            #}
         )
