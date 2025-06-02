@@ -1,12 +1,4 @@
-import json
-import os
-
-import requests
 from crewai import Task
-from crewai.project import task
-
-
-from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
 
 
 #CLASSE PER PERSONALIZZAZIONE TASK

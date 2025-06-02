@@ -1,17 +1,13 @@
-import json
 import os
-import sys
 from typing import List, Optional
 
-import requests
 from pydantic import BaseModel
 
 from crewai.flow.flow import Flow, listen, start, or_, router
-from win32comext.shell.demos.servers.folder_view import tasks
 
-from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.validation import DIRECTORY, Validation
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.refactor_crew.refactor_crew import RefactorCrew
-from multi_agent_system_flow.src.multi_agent_system_flow.crews.sonar_methods.sonar_methods import classes_for_project, esec_class
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_methods import classes_for_project, esec_class
 
 TENTATIVI_MAX: int = 3
 
@@ -76,8 +72,7 @@ class OriginalFlow(Flow[ExampleFlow]):
             Effettua una GET su /api/measures/component_tree e ordina per security_rating  .
         """
 
-        response = classes_for_project("http://localhost:9000/api/measures/component_tree",
-                            self.state.project_list[self.state.current_project])
+        response = classes_for_project(self.state.project_list[self.state.current_project])
 
         self.state.classi = response.json().get("components")     #carica le classi dal JSON
 
@@ -94,7 +89,7 @@ class OriginalFlow(Flow[ExampleFlow]):
             # http://localhost:9000/api/sources/raw necessita della key del progetto come parametro (query string)  ==> la prendo dal JSON
             classe_attuale = self.state.classi[self.state.current_class]
 
-            code = esec_class("http://localhost:9000/api/sources/raw", classe_attuale)
+            code = esec_class(classe_attuale)
 
             self.state.code_class = code.text
 
@@ -141,22 +136,15 @@ class OriginalFlow(Flow[ExampleFlow]):
             self.state.errors += result["errors"]
 
             print(f"VALIDATE: +{self.state.validate}")
-            #print(f"ERRORS: +{self.state.errors}")
-            #scanner = sonar_scanner(self.state.path_class)
-            #print("OOOOOOOO")
-            #self.state.scanner_result= scanner    #prendo il valore di valid restituito dall'output_pydantic della Crew
-            #self.state.errors= result["errors"]    #prendo il valore di errors restituito dall'output_pydantic della Crew
 
 
-            #while self.state.validate
             if self.state.validate:  #vuol dire Build Success
                 #if
                 self.state.current_class += 1   #passa alla prossima classe
 
             else:  #Build Failure (errori di compilazione o altro tipo di errore)
-                #sonar_scanner()
                 self.state.tentativi += 1   #aumenta numero di tentativi e riesegui il refactoring su stessa classe
-                #RefactorCrew().crew().replay(task_id=sys.argv[1])
+
         else:    #arrivato a N tentativi
 
             self.state.current_class +=1   #passa avanti con la classe
@@ -181,5 +169,13 @@ def plot():
 
 
 if __name__ == "__main__":
+    # validator = Validation()
+    # validator.clone_progetti_Git()
+    # validator.creazione_progetti_Sonar()
+    # validator.risultati_pre_refactoring()
+    # print(pd.read_csv("attributes_before_refactoring").to_string())
     kickoff()
     plot()
+    # validator.risultati_post_refactoring()
+    # print(pd.read_csv("attributes_post_refactoring").to_string())
+

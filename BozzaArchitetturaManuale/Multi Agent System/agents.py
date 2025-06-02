@@ -5,14 +5,9 @@ import subprocess
 import requests
 from crewai import Agent, LLM
 from crewai.tools.base_tool import tool
-from crewai_tools.tools.code_interpreter_tool.code_interpreter_tool import CodeInterpreterTool
 from crewai_tools.tools.file_writer_tool.file_writer_tool import FileWriterTool
-from dask.config import paths
-from litellm import completion
-from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-from litellm.types.utils import ModelResponse
 
-from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.validation import DIRECTORY, HEADER
 code_replace = FileWriterTool()
 
 @tool("classe_peggiore")

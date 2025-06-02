@@ -82,6 +82,7 @@ def code_replace(path_class: str, code: str) -> str:
         return f"Errore durante code replace: {e}"
 
 
+
 def build_result(output: TaskOutput) -> bool:
     return output.pydantic.valid != True
 
@@ -113,11 +114,11 @@ class RefactorCrew:
         temperature=0.0
     )
 
-    llm_fast= LLM(
+    '''llm_fast= LLM(
         model="gemini/gemini-1.5-flash",
         api_key=os.getenv("GOOGLE_API_KEY"),
         stream=True
-     )
+     )'''
 
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended

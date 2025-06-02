@@ -1,12 +1,9 @@
-import json
 import os
 import time
 
-import requests
 from crewai import Crew, Process
-from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
 
-from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.validation import DIRECTORY
 from agents import CustomAgent
 from tasks import CustomTask
 
