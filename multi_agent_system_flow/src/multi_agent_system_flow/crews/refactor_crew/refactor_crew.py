@@ -1,10 +1,11 @@
 import os
 import subprocess
 
-from crewai import Agent, Crew, Process, Task, LLM
-from crewai.project import CrewBase, agent, crew, task, output_pydantic
+import requests
+from crewai import Agent, Crew, Process, Task, LLM, TaskOutput
+from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from crewai.tools import tool
 from crewai_tools.tools.file_writer_tool.file_writer_tool import FileWriterTool
@@ -16,27 +17,34 @@ from pydantic import BaseModel
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
 
-@tool("sonar_scanner", result_as_answer=True)
+@tool("sonar-scanner", result_as_answer=True)
 def sonar_scanner(path_class: str):
     """
     Esegue comandi Maven e di SonarScanner nella root del progetto
     :param path_class:
     :return: True if Build Success, False if Build Failure with errors
     """
-    project_key = path_class.split('/')[2]
-    print("PROJECT KEY:  "+project_key)
+
+    #normalizza il percorso per il sistema operativo
+    path_class = os.path.normpath(path_class)
+    parts = path_class.split(os.sep)
+
+    project_key = parts[1]
+    print("PROJECT KEY: ", project_key)
+
     #QUESTO SOLO PER PROGETTI LPO
-    directory_pom = path_class.split('/')[3]
-    print("DIRECTORY POM:  "+ directory_pom)
+    directory_pom = parts[2]
+    print("DIRECTORY POM: ", directory_pom)
+
     try:
         subprocess.run([
-            "mvn.cmd", "clean", "verify", "org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar",
-             f"-Dsonar.projectKey=Progetto_{project_key}",
-             f"-Dsonar.projectName=Progetto_{project_key}",
-             f"-Dsonar.host.url=http://localhost:9000",
-             f"-Dsonar.token={os.getenv("SONAR_LOCAL_API_TOKEN")}",
-             "-DskipTests"
-             ],
+            "mvn.cmd", "clean", "verify", "org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar" ,
+            f"-Dsonar.projectKey=Progetto_{project_key}",
+            f"-Dsonar.projectName=Progetto_{project_key}",
+            f"-Dsonar.host.url=http://localhost:9000",
+            f"-Dsonar.token={os.getenv("SONAR_LOCAL_API_TOKEN")}",
+            "-DskipTests"
+        ],
             #cwd=os.path.join("cloned_repos_lpo", project_key),
 
             #QUESTO SOLO PER PROGETTI LPO
@@ -45,18 +53,47 @@ def sonar_scanner(path_class: str):
             text=True,
             check=True
         )
-        return RefactoringVerificator(valid=True)
+        #valid = "BUILD SUCCESS" in result.stdout
+        return RefactoringVerificator(valid=True, errors="")
 
     except subprocess.CalledProcessError as e:
-        return RefactoringVerificator(valid=False, errors=e.stdout)
+        error_lines = [line for line in e.stdout.splitlines() if "[ERROR]" in line]
+        errors_filtered = "\n".join(error_lines)
+        return RefactoringVerificator(valid=False, errors=errors_filtered)
 
 
-code_replace = FileWriterTool()      #tool che fa code replace
+@tool("code_replace")
+def code_replace(path_class: str, code: str) -> str:
+    """
+    Sovrascrive il file Java in class_path con il contenuto refactored_code,
+    usando scrittura atomica (tmp + os.replace).
+    Ritorna un messaggio di successo o solleva errore.
+    """
+    tmp = path_class + ".tmp"
+    try:
+        # Scrittura atomica
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(code)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path_class)
+        return f"Code replace completato in {path_class}"
+    except Exception as e:
+        return f"Errore durante code replace: {e}"
+
+
+def build_result(output: TaskOutput) -> bool:
+    return output.pydantic.valid != True
+
+
+class QualityVerificator(BaseModel):
+    quality_gates: bool
+    failed_quality: Optional[str]
 
 
 class RefactoringVerificator(BaseModel):
-    errors: Optional[str]
     valid: bool
+    errors: Optional[str]
 
 
 @CrewBase
@@ -72,8 +109,16 @@ class RefactorCrew:
     llm = LLM(
         model="mistral/mistral-medium",
         api_key=os.getenv("MISTRAL_API_KEY"),
-        stream=True
+        stream=True,
+        temperature=0.0
     )
+
+    llm_fast= LLM(
+        model="gemini/gemini-1.5-flash",
+        api_key=os.getenv("GOOGLE_API_KEY"),
+        stream=True
+     )
+
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
     # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
@@ -100,12 +145,27 @@ class RefactorCrew:
         )
 
     @agent
-    def utility_agent(self) -> Agent:
+    def code_replace_agent(self) -> Agent:
         return Agent(
-            config=self.agents_config['utility_agent'],  # type: ignore[index]
-            verbose=True,
+            config=self.agents_config['code_replace_agent'],  # type: ignore[index]
+            verbose=False,
             llm=self.llm
+        )
 
+    @agent
+    def sonar_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config['sonar_agent'],  # type: ignore[index]
+            verbose=False,
+            llm=self.llm
+        )
+
+    @agent
+    def riassunto_errori(self) -> Agent:
+        return Agent(
+            config=self.agents_config['riassunto_errori'],  # type: ignore[index]
+            verbose=False,
+            llm=self.llm
         )
 
     # To learn more about structured task outputs,
@@ -132,7 +192,7 @@ class RefactorCrew:
         return Task(
             config=self.tasks_config['task3'],  # type: ignore[index]
             # context=[self.task2],
-            verbose=True,
+            verbose=False,
             tools=[code_replace],
             #output_pydantic=RefactoringVerificator
         )
@@ -141,10 +201,34 @@ class RefactorCrew:
     def task4(self) -> Task:
         return Task(
             config=self.tasks_config['task4'],  # type: ignore[index]
-            #context=[self.task2],
-            verbose=True,
+            # context=[self.task2],
+            verbose=False,
             tools=[sonar_scanner],
+            #output_pydantic=RefactoringVerificator
+        )
+
+    @task
+    def conditional_task5(self) -> Task:
+        return Task(
+            config=self.tasks_config['conditional_task5'],  # type: ignore[index]
+            # context=[self.task2],
+            verbose=False,
+            tools=[code_replace],
+            condition=build_result,
+            #output_pydantic=RefactoringVerificator
+            # output_pydantic=RefactoringVerificator
+        )
+
+    @task
+    def conditional_task6(self) -> Task:
+        return Task(
+            config=self.tasks_config['conditional_task6'],  # type: ignore[index]
+            # context=[self.task2],
+            verbose=False,
+            #tools=[code_replace],
+            condition=build_result,
             output_pydantic=RefactoringVerificator
+            # output_pydantic=RefactoringVerificator
         )
 
     @crew
@@ -154,13 +238,13 @@ class RefactorCrew:
         # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
 
         return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
+            agents=self.agents,  # Automatically created by the @agent decorator
+            tasks=self.tasks,  # Automatically created by the @task decorator
             process=Process.sequential,
             verbose=True,
             #memory=True,
             #embedder={
-             #   "provider": "ollama",
-              #  "config":{"model": "nomic-embed-text:latest"}
+            #   "provider": "ollama",
+            #  "config":{"model": "nomic-embed-text:latest"}
             #}
         )

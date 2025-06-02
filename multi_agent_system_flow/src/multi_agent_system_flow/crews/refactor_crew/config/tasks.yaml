@@ -1,4 +1,5 @@
 task1:
+
     description: |
                 Analyze the {code_class} carefully and create a precise and comprehensive prompt that 
                 instructs an AI system or automated tool to evaluate source code, focusing on backstory of agent and, if possible, on:
@@ -17,16 +18,18 @@ task2:
     #description: >
      #     To refactor the code, without errors {errors} following the input of previous task
     description: |
-           The agent takes the code and the prompt of previous task (task1) as input and makes code refactoring, following these lines:
-          - preserve the structure, the number and ALL signatures of the original code's method
-          - not make errors {errors}
-          - preserve all the relationships with other classes (inheritance, abstract classes, etc.)
-          - preserve ALL number and signature of constructors and the names of classes. THIS IS IMPORTANT !! 
-          - do not drastically changes of the code,but improve it only where necessary 
+          The agent takes the code and the prompt of previous task (task1) as input and makes code refactoring, following these lines:
+          - preserve the structure, the number and ALL signatures of the original code's method and class name
+          - non ripetere blocchi di codice. 
+          - preserve ALL signature of constructors
+          - do not change too much code
+          - not make compilation and syntax errors {errors}
+          - preserve all the relationships with other classes (inheritance, abstract classes, etc.) 
           - keep ALL comments (if some lines are comments there is a reason)
-          - keep absolutely the licenses
+          - if there is, keep the licenses. If the class not contains licenses, DO NOT insert it a new
           - not include test cases
-          - do not syntax errors
+          - use UTF-8
+          
           
 
     #description="You will be given code snippets or segments for improvement. "
@@ -45,29 +48,58 @@ task2:
 
 
 
+
 task3:
     description: >
-            Fai code replace in {path_class} del codice refattorizzato.
+            Fai code replace in {path_class} del codice refattorizzato dalla task precedente.
+
     expected_output: >
             Se il code replace è andato a buon fine
     context:
       - task2
-    agent: utility_agent
-
+    agent: code_replace_agent
 
 
 
 task4:
     description: >
-            Passa {path_class} al tool sonar_scanner ed esegui comandi da terminale
+           Esegui comandi da terminale passando al tool sonarscanner il {path_class}.
+
     expected_output: |
-            Dopo aver usato SonarScanner, restituisci: 
-            - Valid: True/False based on errors 
-            - Errors: if Valid is True, write the compilation errors (or other type of errors)
-    context:
-      - task2
-    agent: utility_agent
+            Se lo scanner è andato a buon fine, senza restituire il codice e gli errori
+
+    agent: sonar_agent
 
 
+
+conditional_task5:
+     description: >
+            Fai code replace di {code_class}, ovvero il codice iniziale in {path_class},
+            perchè, evidentemente, ci sono stati degli errori nel codice refattorizzato da task precedenti. Quindi
+            riporta il codice iniziale nel posto giusto.
+
+     expected_output: >
+            Se il code replace è andato a buon fine, senza restituire il codice
+
+     agent: code_replace_agent
+
+
+
+
+conditional_task6:
+     description: >
+           Hai ricevuto in input una lista di errori SonarScanner provenienti dalla task4.
+           **Obiettivo**: restituisci un riassunto chiaro e conciso dei principali problemi rilevati da Sonar
+     expected_output: |
+           Ritorna JSON con :
+           - "valid" : con il valid restituito da task4
+           - "errors" : il riassunto degli errori di task4, del tipo:
+             - [Tipo di errore]: breve descrizione e suggerimento.
+             - [Altro tipo]: ...
+           **IMPORTANTE**: il campo `"valid"` nel JSON di output deve corrispondere
+           senza alcuna modifica a valid di task4
+     context:
+       - task4
+     agent: riassunto_errori
 
 

@@ -1,14 +1,17 @@
 import json
 import os
+import sys
 from typing import List, Optional
 
 import requests
 from pydantic import BaseModel
 
 from crewai.flow.flow import Flow, listen, start, or_, router
+from win32comext.shell.demos.servers.folder_view import tasks
 
 from BozzaArchitetturaManuale.validation import DIRECTORY, HEADER
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.refactor_crew.refactor_crew import RefactorCrew
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.sonar_methods.sonar_methods import classes_for_project, esec_class
 
 TENTATIVI_MAX: int = 3
 
@@ -22,7 +25,7 @@ class ExampleFlow(BaseModel):
     errors: str = ""         #errori (di compilazione o altri) da passare alla Crew per indirizzare agente a non commetterli
     validate: str = ""       #flag che verifica se il comando da terminale per una classe ha restituito Build Success o Build Failure
     tentativi: Optional[int] = 0    #contatore per tenere traccia del numero di tentativi su una singola classe
-
+    #scanner_result: str = ""
 
 class OriginalFlow(Flow[ExampleFlow]):
 
@@ -33,6 +36,7 @@ class OriginalFlow(Flow[ExampleFlow]):
         """
         self.state.project_list = [repository for repository in os.listdir("./cloned_repos_lpo")]
         print(self.state.project_list)
+
 
 
     @router(or_("init", "classes_for_project", "refactor_code"))
@@ -72,31 +76,11 @@ class OriginalFlow(Flow[ExampleFlow]):
             Effettua una GET su /api/measures/component_tree e ordina per security_rating  .
         """
 
-        param = {
-            "component": f"Progetto_{self.state.project_list[self.state.current_project]}",
-            "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
-            # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
-            # "blocker_violations,critical_violations",
-                "security_rating, vulnerabilities",
-            "qualifiers": "FIL",
-            "s": "metric",
-            "metricSort": "security_rating",
-            "ps": 3,
-            "asc": "false"
-        }
-        try:
-            response = requests.get("http://localhost:9000/api/measures/component_tree", headers=HEADER, params=param)
+        response = classes_for_project("http://localhost:9000/api/measures/component_tree",
+                            self.state.project_list[self.state.current_project])
 
-            response.raise_for_status()
-            print(json.dumps(response.json(), indent=4))
-            self.state.classi = response.json().get("components")
+        self.state.classi = response.json().get("components")     #carica le classi dal JSON
 
-        except requests.exceptions.HTTPError as e:
-            print(f"Errore HTTP ({e.response.status_code}) durante la ricerca: {e}")
-
-        except requests.exceptions.RequestException as e:
-            print(f"Errore di rete o altro problema nella richiesta: {e}")
-        # "http://localhost:9000/api/qualitygates/project_status?projectKey=progetto-java"  ULR per vedere se il progetto passa il Quality Gate
 
 
 
@@ -109,13 +93,10 @@ class OriginalFlow(Flow[ExampleFlow]):
 
             # http://localhost:9000/api/sources/raw necessita della key del progetto come parametro (query string)  ==> la prendo dal JSON
             classe_attuale = self.state.classi[self.state.current_class]
-            param2 = {
-                "key": classe_attuale.get("key")
-            }
 
-            code = requests.get("http://localhost:9000/api/sources/raw", headers=HEADER, params=param2)
+            code = esec_class("http://localhost:9000/api/sources/raw", classe_attuale)
+
             self.state.code_class = code.text
-
 
             # COSI FACENDO NON INCORRO IN ERRORI DEL TIPO:
             # l'agente mi fa un refactoring errato (cioè che SonarScanner restituisce Build Failure e, quindi, il codice non viene aggiornato),
@@ -149,31 +130,44 @@ class OriginalFlow(Flow[ExampleFlow]):
 
         if self.state.tentativi < TENTATIVI_MAX:    #questo posso farlo anche nel router (anzi forse la devo farlo)
 
-            result = RefactorCrew().crew().kickoff(inputs={"code_class": self.state.code_class, "path_class": self.state.path_class, "errors": self.state.errors})
+            #ovviamente alla prima iterazione self.state.scanner_result è vuoto, poi se al primo tentativo Build Failure allora
+            #contiene gli errori che ha restituito SonarScanner
+            result = RefactorCrew().crew().kickoff(
+                inputs={"code_class": self.state.code_class, "path_class": self.state.path_class,
+                        "errors": self.state.errors})
 
-            self.state.validate= result["valid"]   #prendo il valore di valid restituito dall'output_pydantic della Crew
-            self.state.errors= result["errors"]    #prendo il valore di errors restituito dall'output_pydantic della Crew
+
+            self.state.validate = result["valid"]
+            self.state.errors += result["errors"]
 
             print(f"VALIDATE: +{self.state.validate}")
-            print(f"ERRORS: +{self.state.errors}")
+            #print(f"ERRORS: +{self.state.errors}")
+            #scanner = sonar_scanner(self.state.path_class)
+            #print("OOOOOOOO")
+            #self.state.scanner_result= scanner    #prendo il valore di valid restituito dall'output_pydantic della Crew
+            #self.state.errors= result["errors"]    #prendo il valore di errors restituito dall'output_pydantic della Crew
 
+
+            #while self.state.validate
             if self.state.validate:  #vuol dire Build Success
+                #if
                 self.state.current_class += 1   #passa alla prossima classe
 
             else:  #Build Failure (errori di compilazione o altro tipo di errore)
+                #sonar_scanner()
                 self.state.tentativi += 1   #aumenta numero di tentativi e riesegui il refactoring su stessa classe
-
+                #RefactorCrew().crew().replay(task_id=sys.argv[1])
         else:    #arrivato a N tentativi
 
             self.state.current_class +=1   #passa avanti con la classe
-            self.state.validate = ""   #riazzero validate
-            self.state.errors = ""   #riazzero errors
+            self.state.validate= ""
+            self.state.errors= ""
             self.state.tentativi = 0   #riazzero tentativi per la prossima classe
 
 
 
-
-
+    def quality_check(self):
+        pass
 
 
 def kickoff():
