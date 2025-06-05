@@ -1,3 +1,4 @@
+import json
 import os
 import time
 from abc import ABC, abstractmethod
@@ -5,28 +6,11 @@ from typing import Final
 from git import Repo
 import requests
 
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import header_git, DIRECTORY, \
+    FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_methods import crea_progetto, \
      restituisci_metriche_pre_kickoff, restituisci_metriche_post_kickoff
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import grafici
-
-#puoi creare Singleton che esegue tutti questi metodi per un'unica istanza
-
-_BASE_URL= "https://github.com"
-_ORG_URL= "apache"
-_TOPIC_URL= "commons"
-DIRECTORY= "./cloned_repos_lpo"
-_FILE_REPORT_PRE_REFACTORING = "attributes_before_refactoring"  #attributo privato
-_FILE_REPORT_POST_REFACTORING = "attributes_post_refactoring"  #attributo privato
-
-#header che contiene il token di SonarQube, usato in tutte le chiamate API
-HEADER: Final[dict[str, str]] = {
-    "Authorization": f"Bearer {os.getenv("SONAR_LOCAL_API_TOKEN")}",
-
-}
-
-header_git = {
-            "Authorization": f"Bearer {os.getenv("GITHUB_API_TOKEN")}"
-}
 
 
 
@@ -46,13 +30,24 @@ class BaseValidation(ABC):
        pass
 
    @abstractmethod
-   def risultati(self):
+   def risultati_pre_refactoring(self):
        """
-       Visualizzazione dei risultati dell'analisi statica che SonarQube ha effettuato per ogni progetto
-       Args:
-          directory: directory che contiene tutti i progetti salvati in locale (non è detto anche su SonarQube)
+       Visualizzazione dei risultati dell'analisi statica che SonarQube ha effettuato per ogni progetto.
+       Pulizia dei progetti: eliminazione di quelli non significativi ai fini dell'approccio
+
        Return:
-          Dataframe con i risultati
+          Dataframe con i risultati pre refactoring
+       """
+       pass
+
+   @abstractmethod
+   def risultati_post_refactoring(self):
+       """
+       Visualizzazione dei risultati dell'analisi statica che SonarQube ha effettuato per ogni progetto, dopo il refactoring del MAS.
+       Creazione grafici per trovare differenze fra prima e dopo refactoring.
+
+       Return:
+          Grouped Chart con i risultati
        """
        pass
 
@@ -64,37 +59,30 @@ class Validation(BaseValidation):
 
 
     def clone_progetti_Git(self):
-        #for project in commons_projects:
-        #url = f"{BASE_URL}/{ORG_URL}/{TOPIC_URL}-{project}.git"
-        #url = "https://github.com/orgs/LPODISIM2024/repositories?visibility=private"
-        repos_url= "https://api.github.com/search/repositories?q=apache+commons+language:java&per_page=50"
-        #repos_url = f"https://api.github.com/orgs/LPODISIM2025/repos?type=private"
+
+        #repos_url= "https://api.github.com/search/repositories?q=apache+commons+language:java&per_page=25"
+        repos_url = f"https://api.github.com/orgs/LPODISIM2024/repos?type=private"
 
         response = requests.get(repos_url, headers=header_git)
         repos = response.json()
         #path = f"{DIRECTORY}"
         #print(json.dumps(repos, indent=3))
 
-        for repository in repos["items"]:
+        '''for repository in repos["items"]:
             clone_url = repository.get("clone_url")
             print(f"Clonando {clone_url}")
             path_destinazione = f"{DIRECTORY}/{repository.get("name")}"
 
             Repo.clone_from(clone_url, path_destinazione)
-            time.sleep(2)  # pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)
+            time.sleep(2)  # pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)'''
 
-        '''for repository in repos:
+        for repository in repos:
             url = repository.get("clone_url")
             print(f"Clonando {url}")
             path_destinazione = f"{DIRECTORY}/{repository.get("name")}"
 
             Repo.clone_from(url, path_destinazione)
-            time.sleep(2)   #pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)'''
-
-            #repo = Repo.clone_from(url, path, recurse_submodules=True)  #!!!!!!
-            #repo.submodule_update(recursive=True, init=True)  #!!!!!
-
-    #QUESTO è UN CLONE MANUALE, POI ANDRA FATTO IN MODO DINAMICO MODELLANDO LA RICHIESTA A GIT TRAMITE response, header e API key
+            time.sleep(2)   #pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)
 
 
 
@@ -131,7 +119,7 @@ class Validation(BaseValidation):
 
             restituisci_metriche_post_kickoff(project)
 
-        grafici(_FILE_REPORT_PRE_REFACTORING, _FILE_REPORT_POST_REFACTORING)
+        grafici(FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING)
 
 
 

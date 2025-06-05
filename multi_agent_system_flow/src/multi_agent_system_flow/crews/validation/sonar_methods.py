@@ -2,8 +2,8 @@ import json
 
 import requests
 
-from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.validation import HEADER, _FILE_REPORT, \
-    _FILE_REPORT_PRE_REFACTORING, _FILE_REPORT_POST_REFACTORING
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import HEADER, \
+    FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING, FILE_REPORT_POST_REFACTORING_NEW_CODE
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import scanner_da_terminale, \
     search_pom, elimina_da_locale, crea_report
 
@@ -119,9 +119,8 @@ def restituisci_metriche_pre_kickoff(project):
             elimina_da_locale(project)
 
         else:
-            crea_report(response.json(), project, _FILE_REPORT_PRE_REFACTORING)
+            crea_report(response.json(), project, FILE_REPORT_PRE_REFACTORING)
 
-            # TODo: QUI VA FATTO L'IF (MINING) CON LA SOGLIA MASSIMA DELLE METRICHE DEI PROGETTI ---> DA FARE PIU AVANTI
 
     except requests.exceptions.HTTPError as e:
         error_response = e.response.json()
@@ -154,13 +153,32 @@ def restituisci_metriche_post_kickoff(project):
 
         response.raise_for_status()
 
-        crea_report(response.json(), project, _FILE_REPORT_POST_REFACTORING)
+        crea_report(response.json(), project, FILE_REPORT_POST_REFACTORING)
 
     except requests.exceptions.HTTPError as e:
         print(f"Errore HTTP ({e.response.status_code}) durante la chiamata: {e}")
 
     except requests.exceptions.RequestException as e:
         print(f"Errore di rete o altro problema nella richiesta: {e}")
+
+    '''try:
+        new_code_params = param.copy()
+        new_code_params.update({
+            "metricKeys": "new_ncloc,new_bugs,new_vulnerabilities,new_code_smells,new_coverage,new_duplicated_lines_density,"
+                          "new_reliability_rating,new_sqale_rating,new_security_rating,new_cognitive_complexity,"
+                          "new_blocker_violations,new_critical_violations",
+            "additionalFields": "period",
+            #"strategy": "new_code_period"
+        })
+
+        response = requests.get(url, headers=HEADER, params=new_code_params)
+        response.raise_for_status()
+        crea_report(response.json(), project, FILE_REPORT_POST_REFACTORING_NEW_CODE)
+
+    except requests.exceptions.HTTPError as e:
+        print(f"[NEW CODE] Errore HTTP ({e.response.status_code}): {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"[NEW CODE] Errore di rete: {e}")'''
 
 
 
@@ -172,10 +190,10 @@ def classes_for_project(project):
         "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
         # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
         # "blocker_violations,critical_violations",
-            "security_rating, vulnerabilities",
+            "vulnerabilities",
         "qualifiers": "FIL",
         "s": "metric",
-        "metricSort": "security_rating",
+        "metricSort": "vulnerabilities",
         "ps": 3,
         "asc": "false"
     }
@@ -184,7 +202,7 @@ def classes_for_project(project):
 
         response.raise_for_status()
         print(json.dumps(response.json(), indent=4))
-        print(response)
+        #print(response)
         return response
 
     except requests.exceptions.HTTPError as e:
@@ -208,7 +226,7 @@ def esec_class(classe):
         response = requests.get(url, headers=HEADER, params=param)
         #print(json.dumps(response.json(), indent=4))
         response.encoding = 'utf-8'
-        print(response)
+        #print(response)
         return response
 
     except requests.exceptions.HTTPError as e:
@@ -221,7 +239,30 @@ def esec_class(classe):
 
 
 
+def metrics(classe):
+    url = "http://localhost:9000/api/measures/component"
+    param = {
+        "component": f"{classe}",
 
+        "metricKeys": "vulnerabilities"
+    }
+
+
+    try:
+        response = requests.get(url, headers=HEADER, params=param)
+
+        response.raise_for_status()
+        print(json.dumps(response.json(), indent=4))
+        #i controlli li ho già fatti tutti nella fase di validation
+        return response.json().get("component").get("measures")[0].get("value")
+
+    except requests.exceptions.HTTPError as e:
+        print(f"Errore sconosciuto: {e}")
+        # print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_codec: {e}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Errore di rete o altro problema nella richiesta: {e}")
+        #return
 
 
 '''def check_quality_gates(path_class: str):

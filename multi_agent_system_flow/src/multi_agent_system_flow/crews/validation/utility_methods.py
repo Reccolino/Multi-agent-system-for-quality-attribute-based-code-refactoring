@@ -113,44 +113,62 @@ def crea_report(data_json, project, data_file):
 
 
 def grafici(file_pre_refactoring, file_post_refactoring):
-
     before = pd.read_csv(file_pre_refactoring)
     after = pd.read_csv(file_post_refactoring)
 
-    metrics = ["Security Rating", "Vulnerabilities", "Bugs", "Code Smells", "Duplicated Lines Density", "Cognitive Complexity"]
-    projects = before["Progetto"]
+    metrics = ["Security Rating", "Vulnerabilities","Bugs","Reliabilty Rating","Code Smells"
+        ,"Maintainability Rating","Cognitive Complexity","Duplicated Lines Density","Blocker Violations","Critical Violations"]
+    projects = before["Progetto"].tolist()
     n_projects = len(projects)
-    n_metrics = len(metrics)
-
-    # Posizioni x
     index = np.arange(n_projects)
     bar_width = 0.35
-    spacing = 0.15  # spazio tra gruppi di barre per ogni metrica
 
-    # Imposta dimensione dinamica del grafico
-    fig, ax = plt.subplots(figsize=(14, 6))
-
-    # Colori diversi per ogni metrica
-    colors = ['skyblue', 'lightgreen', 'salmon', 'gold', 'orchid']
-
-    # Offset per ogni metrica (per affiancarle)
-    for i, metric in enumerate(metrics):
+    for metric in metrics:
+        # Estrazione dei valori "prima" e "dopo"
         before_vals = before[metric]
         after_vals = after[metric]
 
-        # Calcolo posizione orizzontale (shift per ogni metrica)
-        pos = index + (i - n_metrics / 2) * (bar_width + spacing / n_metrics)
+        # Verifico se il valore è categoriale (dtype object) o numerico
+        is_categorical = before_vals.dtype == object or after_vals.dtype == object
 
-        ax.bar(pos, before_vals, bar_width, label=f"{metric} (Prima)", color=colors[i], alpha=0.6)
-        ax.bar(pos + bar_width, after_vals, bar_width, label=f"{metric} (Dopo)", color=colors[i], alpha=1.0)
+        if is_categorical:
+            # Unisco tutti i possibili valori categoriali presenti in before o after
+            categories = sorted(set(before_vals.unique()).union(set(after_vals.unique())))
+            # Mappo categorie → interi (0, 1, 2, …)
+            mapping = {cat: i for i, cat in enumerate(categories)}
+            # Converto i valori in interi per poterli plottare
+            before_num = before_vals.map(mapping)
+            after_num = after_vals.map(mapping)
+            y_before = before_num.values
+            y_after = after_num.values
+        else:
+            # Dati già numerici
+            y_before = before_vals.values
+            y_after = after_vals.values
 
-    # Etichette e layout
-    ax.set_title("Confronto metriche di qualità - Prima vs Dopo Refactoring")
-    ax.set_xlabel("Progetto")
-    ax.set_ylabel("Valore")
-    ax.set_xticks(index)
-    ax.set_xticklabels(projects, rotation=45, ha="right")
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    plt.grid(axis='y', linestyle='--', alpha=0.4)
-    plt.show()
+        # Creo un nuovo figure/ax per ogni metrica
+        fig, ax = plt.subplots(figsize=(12, 5))
+
+        # Posizione delle barre: due serie affiancate
+        pos = index - bar_width / 2
+        ax.bar(pos, y_before, bar_width, label=f"{metric} (Prima)", alpha=0.6)
+        ax.bar(pos + bar_width, y_after, bar_width, label=f"{metric} (Dopo)", alpha=1.0)
+
+        # Impostazioni assi e titolo
+        ax.set_title(f"Confronto '{metric}' – Prima vs Dopo Refactoring")
+        ax.set_xlabel("Progetto")
+        ax.set_xticks(index)
+        ax.set_xticklabels(projects, rotation=45, ha="right")
+
+        if is_categorical:
+            # Riporto i tick interi ai valori categoriali originali
+            ax.set_yticks(list(mapping.values()))
+            ax.set_yticklabels(list(mapping.keys()))
+            ax.set_ylabel("Categoria")
+        else:
+            ax.set_ylabel("Valore numerico")
+
+        ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
+        ax.grid(axis="y", linestyle="--", alpha=0.4)
+        plt.tight_layout()
+        plt.show()

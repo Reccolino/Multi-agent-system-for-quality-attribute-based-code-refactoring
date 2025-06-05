@@ -1,47 +1,87 @@
 task1:
 
     description: |
-                Analyze the {code_class} carefully and create a precise and comprehensive prompt that 
-                instructs an AI system or automated tool to evaluate source code, focusing on backstory of agent and, if possible, on:
-                - Bad Practices (e.g., duplicated code, improper naming, code smells)
-                - Correctness (compliance with style and logic rules)
-                - Critical Security Issues (e.g., injection vulnerabilities, insecure APIs, buffer overflows).
-    expected_output: >
-                    A single, self-contained prompt in natural language, written in English, that clearly instructs 
-                    another AI agent on how to improve the security of the given code. It should be suitable to use 
-                    as direct input for a language model.
+         You are MasterPrompt, a Security-Focused Static Code Analysis Expert. 
+        Analyze the following Java source code:
+        {code_class}
+    
+        Then generate a single, self-contained prompt in English that a downstream AI agent can use to:
+    
+        1. **Leverage SonarQube Quality Attributes**  
+           - Examine Reliability, Security, Maintainability, Coverage, Code Smells and Duplications.  
+           - Prioritize issues flagged by SonarQube Quality Gates (e.g., Security Rating, Vulnerabilities, Reliability Rating).
+    
+        2. **Integrate Java Static-Analysis Plugins**  
+           - Instruct how to run Checkstyle rules for naming conventions and style consistency.  
+           - Include PMD scans for bug patterns (unused variables, inefficient loops, null‐dereferences).  
+           - Include FindBugs (SpotBugs) checks for bytecode-level security defects (e.g., null‐pointer dereference, SQL injection annotations).
+    
+        3. **Identify and Mitigate Critical/Blocker Vulnerabilities**  
+           - Point out OWASP Top 10 risks: SQL injection, XSS, insecure deserialization, hardcoded credentials, weak cryptography.  
+           - Detect use of insecure Java APIs (e.g., `Runtime.exec`, unsanitized JDBC statements, `ObjectInputStream` without validation).  
+           - Highlight buffer overflow or memory‐unsafe patterns in native calls or array handling.
+    
+        4. **Suggest Concrete Remediation Steps**  
+           - Propose secure coding best practices (input validation, prepared statements, safe deserialization).  
+           - Recommend configuration changes or use of hardened libraries (e.g., use `java.sql.PreparedStatement`).  
+           - Advise on writing test cases (unit/integration) to verify that vulnerabilities have been fixed.
+    
+        5. **Format and Output**  
+           - The final output must be a single, clear prompt (in English) that can be provided verbatim to another AI model.  
+           - Do not include code modifications yourself—only craft the instructions.  
+           - Appendi **“###FINE”** esattamente alla fine del prompt per segnalare la conclusione.
+
+    expected_output: |
+      A single, self-contained English prompt that:
+      - Clearly tells an AI agent how to run SonarQube and Java plugin scans (Checkstyle, PMD, FindBugs).  
+      - Guides the AI to identify bad practices, code smells, style/logic inconsistencies, and critical security flaws (OWASP Top 10).  
+      - Instructs the AI on remediation actions (secure APIs, input sanitization, configuration fixes, writing tests).  
+      - Concludes with “###FINE” on its own line to stop further processing.
+
     agent: query_writer
 
 
 
 task2:
-    #description: >
-     #     To refactor the code, without errors {errors} following the input of previous task
+    #ho notato che dando all'LLM comandi itemizzati, lui risponde meglio
     description: |
-          The agent takes the code and the prompt of previous task (task1) as input and makes code refactoring, following these lines:
-          - preserve the structure, the number and ALL signatures of the original code's method and class name
-          - non ripetere blocchi di codice. 
-          - preserve ALL signature of constructors
-          - do not change too much code
-          - not make compilation and syntax errors {errors}
-          - preserve all the relationships with other classes (inheritance, abstract classes, etc.) 
-          - keep ALL comments (if some lines are comments there is a reason)
-          - if there is, keep the licenses. If the class not contains licenses, DO NOT insert it a new
-          - not include test cases
-          - use UTF-8
-          
-          
+        You are MasterJava, a Java Code Refactoring Expert. 
+        Using the prompt produced in task1 as guidance, refactor the given Java code according to these strict rules:
+          1. **Preserve Structure:**  
+             - Keep all class and method names exactly as originally defined, including constructors and overloads.  
+             - Retain the original package declaration and all import statements.  
+             - Do not change the order or number of methods, fields, or nested classes.
+          2. **Maintain Comments & Licenses:**  
+             - Keep every existing comment (single-line, multi-line, Javadoc) intact and in its original location.  
+             - Preserve any license header if present. If no license is found in the original, do not add one.
+          3. **Avoid Code Duplication:**  
+             - Remove or consolidate duplicated code blocks by extracting common functionality into private helper methods or utility functions, without changing external behavior.
+          4. **Retain Class Relationships:**  
+             - Do not alter inheritance hierarchies, implemented interfaces, abstract class extensions, or annotations that affect class loading/behavior.
+          5. **Minimize Changes:**  
+             - Only refactor code that directly addresses issues highlighted in task1 (e.g., insecure APIs, code smells, bad practices).  
+             - Do not introduce any new compilation or runtime errors.  
+             - Do not add or remove test cases.
+          6. **Maintain Functionality:**  
+             - Ensure that for every refactored method or class, the original logic and behavior remain identical (input → output).  
+             - Do not change method signatures, parameter lists, return types, or thrown exceptions.
+          7. **Security & Best Practices:**  
+             - Replace any usage of insecure Java APIs (e.g., raw `Runtime.exec`, unsanitized JDBC calls, unchecked deserialization) with secure alternatives (e.g., `ProcessBuilder`, `PreparedStatement`, validated serialization frameworks).  
+             - Apply principle of least privilege: do not introduce new permissions or reduce security controls.
+          8. **Formatting & Style:**  
+             - Align formatting with common Java conventions (4-space indentation, consistent brace style) only if it does not conflict with existing project style.  
+             - Do not remove or alter existing formatting in critical regions (e.g., aligned tables in comments, hand-tuned code alignment), unless necessary for security fixes.
+          9. **Error Avoidance:**  
+             - Guarantee no new syntax or compilation errors: compile the refactored code mentally to ensure correctness.  
+             - Do not remove or alter try/catch blocks that handle critical exceptions, unless a safer alternative is provided.
+         10. **Output Format:**  
+             - Provide the fully refactored Java source, ready to compile without modification.  
+             - Do not wrap the code in markdown fences; output the raw Java file content.  
+             - Do not include any explanatory notes in the code; comments should exist only if they were in the original or are necessary for security context (e.g., “// Hardened to prevent SQL injection”).
 
-    #description="You will be given code snippets or segments for improvement. "
-    #           "Your task is to interact with the user when necessary to clarify context or requirements. "
-    #          "Then, suggest clear, maintainable refactorings that preserve original functionality. "
-    #         "Prioritize clarity and maintainability. When applicable, apply well-known design patterns. "
-    #        "Optimize performance only if it doesn't compromise readability or introduce premature "
-    #       "optimization issues. Identify and address potential errors and edge cases for robustness. "
-    #      "For every improvement or change, provide concise, informative explanations detailing why"
-    #     " the change is beneficial",
     expected_output: >
-        Full Code refactoring
+        The complete refactored Java source code, preserving all original signatures, comments, licenses, and structure, with no compilation errors. The code must reflect improvements as instructed in the prompt from task1.
+
     context:
         - task1
     agent: code_refactor
@@ -51,7 +91,7 @@ task2:
 
 task3:
     description: >
-            Fai code replace in {path_class} del codice refattorizzato dalla task precedente.
+            Fai code replace in: {path_class} del codice refattorizzato dalla task precedente.
 
     expected_output: >
             Se il code replace è andato a buon fine
@@ -73,13 +113,15 @@ task4:
 
 
 conditional_task5:
-     description: >
-            Fai code replace di {code_class}, ovvero il codice iniziale in {path_class},
+     description: |
+            Fai code replace di:
+            {code_class}
+            ovvero il codice iniziale in {path_class},
             perchè, evidentemente, ci sono stati degli errori nel codice refattorizzato da task precedenti. Quindi
             riporta il codice iniziale nel posto giusto.
 
      expected_output: >
-            Se il code replace è andato a buon fine, senza restituire il codice
+            Se il code replace è andato a buon fine, senza restituire il codice.
 
      agent: code_replace_agent
 
