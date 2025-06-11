@@ -15,6 +15,7 @@ from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_
 
 TENTATIVI_MAX: int = 3
 tentativi_tot: int = 0
+tempo_per_progetto: List[float] = []
 
 class ExampleFlow(BaseModel):
     project_list: List[str] = []      #lista di progetti
@@ -26,8 +27,9 @@ class ExampleFlow(BaseModel):
     errors: Optional[str] = ""         #errori (di compilazione o altri) da passare alla Crew per indirizzare agente a non commetterli
     validate: bool        #flag che verifica se il comando da terminale per una classe ha restituito Build Success o Build Failure
     tentativi: Optional[int] = 0    #contatore per tenere traccia del numero di tentativi su una singola classe
-    value_metric_pre: Optional[int] = 0
-    value_metric_post: Optional[int] = 0
+    #value_metric_pre: Optional[int] = 0   #DA SCOMMENTARE PER LA RQ2
+    #value_metric_post: Optional[int] = 0   #DA SCOMMENTARE PER LA RQ2
+    project_start_times: List[float] = []
 
 class OriginalFlow(Flow[ExampleFlow]):
 
@@ -36,10 +38,11 @@ class OriginalFlow(Flow[ExampleFlow]):
         """
         Metodo che carica tutti i progetti nella project_list. Da qui si potrà accedere ai singoli progetti e alle classi dei progetti
         """
+        global tempo_per_progetto
         self.state.project_list = [repository for repository in os.listdir("./cloned_repos_lpo")]
         print(self.state.project_list)
-
-
+        tempo_per_progetto = [0.0 for _ in self.state.project_list]
+        self.state.project_start_times = [0.0 for _ in self.state.project_list]
 
     @router(or_("init", "classes_for_project", "refactor_code"))
     def router(self, _=None):
@@ -54,11 +57,14 @@ class OriginalFlow(Flow[ExampleFlow]):
 
         #Se ho ancora classi residue per questo progetto
         if self.state.current_class < len(self.state.classi):
+            self.state.project_start_times[self.state.current_project] = time.time()
             return "percorso_classe"
 
 
         #Ho processato tutte le classi di questo progetto:
         #passo al prossimo progetto (se esiste) o termino
+        tempo_per_progetto[self.state.current_project] = time.time() - self.state.project_start_times[
+            self.state.current_project]
         self.state.current_project += 1
         if self.state.current_project < len(self.state.project_list):
             # resetto le classi per il nuovo progetto
@@ -79,15 +85,16 @@ class OriginalFlow(Flow[ExampleFlow]):
         """
 
         response = classes_for_project(self.state.project_list[self.state.current_project])
-        all_components = response.json().get("components", [])
 
+        #DA SCOMMENTARE PER RQ2
+        '''all_components = response.json().get("components", [])
         filtered = [c for c in all_components if c.get("measures")]   #ho solo le classi che hanno effettivamente una measure
         #questo perchè può essere che un progetto abbia 1 solo vulnerabilities e il json mi restituisce le prime 3 classi
         #ma cosi mi restituisce la classe dove è presente effettivamente il vulnerabilities e altre 2 classi che non hanno problemi
         #quindi per quelle due che senso ha fare refactoring ?
         print(f"FILTERED {filtered}")
-        self.state.classi = filtered
-        #self.state.classi = response.json().get("components")     #carica le classi dal JSON
+        self.state.classi = filtered'''
+        self.state.classi = response     #carica le classi dal JSON
 
 
 
@@ -105,19 +112,8 @@ class OriginalFlow(Flow[ExampleFlow]):
             code = esec_class(classe_attuale)
 
             self.state.code_class = code.text
-            #print(f"CLASSE ATTUAL KEY {classe_attuale.get("key")}")
-            self.state.value_metric_pre = int(metrics(classe_attuale.get("key")))
 
-            # COSI FACENDO NON INCORRO IN ERRORI DEL TIPO:
-            # l'agente mi fa un refactoring errato (cioè che SonarScanner restituisce Build Failure e, quindi, il codice non viene aggiornato),
-            # ma il code replace va a buon fine. Allora alla prossima esecuzione il codice in input
-            # sarà proprio quello generato dall'esecuzione precedente perchè con il codice vecchio (quello commentato qui sotto) l'agente
-            # prendeva in input sempre il codice della classe peggiore, ma salvata in locale, non da SonarQube.
-            # Invece, cosi, l'agente prende in input SEMPRE il codice da SonarQube cosi che se ad una esecuione ci sono errori di compilazione, per esempio,
-            # viene fatto si code replace in locale, ma tanto si prende in input il codice da SonarQube che non è cambiato
-            '''with open(f"{DIRECTORY}/commons-codec/{response.json().get("components")[0].get("path")}", "r",
-                      encoding="utf-8") as f:
-                 code = f.read()'''
+            #self.state.value_metric_pre = int(metrics(classe_attuale.get("key")))  #DA SCOMMENTARE PER LA RQ2
 
             project_root = f"{DIRECTORY}/{self.state.project_list[self.state.current_project]}"
 
@@ -149,25 +145,34 @@ class OriginalFlow(Flow[ExampleFlow]):
 
 
             self.state.validate = result["valid"]
-            self.state.errors = result["errors"]
-            self.state.value_metric_post = result["metric"]
+            self.state.errors = result["errors"].strip() or "errors"
+            #se errors è "" allora self.state.errors lo faccio idventare semplicemente "errors"
+            #cosi che il templating nella task2 funzioni in entrambi i casi
+
+            #self.state.value_metric_post = result["metric"]   #DA SCOMMENTARE PER LA RQ2
 
             print(f"VALIDATE: {self.state.validate}")
-            print(f"VALORE METRICA: {self.state.value_metric_pre}")
+            #print(f"VALORE METRICA: {self.state.value_metric_pre}")   #DA SCOMMENTARE PER LA RQ2
 
 
             if self.state.validate:  #vuol dire Build Success
-                if self.state.value_metric_post <= self.state.value_metric_pre:   #c'è stato un miglioramento
+                '''if self.state.value_metric_post <= self.state.value_metric_pre:   #c'è stato un miglioramento
                     print(f"VULNERABILITIES PRIMA: {self.state.value_metric_pre}")
                     print(f"VULNERABILITIES DOPO: {self.state.value_metric_post}")
                     self.state.tentativi += 1  #aumenta numero di tentativi e riesegui il refactoring su stessa classe
                     tentativi_tot += 1
-                else:
-                    self.state.current_class += 1   #passa alla prossima classe
+                else:'''   #DA SCOMMENTARE PER LA RQ2
+                self.state.current_class += 1   #passa alla prossima classe
+                self.state.validate = ""
+                self.state.errors = ""
+                self.state.tentativi = 0  # riazzero tentativi per la prossima classe
+                # self.state.value_metric_pre = 0
+                # self.state.value_metric_post = 0
 
             else:  #Build Failure (errori di compilazione o altro tipo di errore)
                 self.state.tentativi += 1   #aumenta numero di tentativi e riesegui il refactoring su stessa classe
                 tentativi_tot += 1
+                print(F"TENTATIVI TOT PER ORA: {tentativi_tot}")
 
         else:    #arrivato a N tentativi
             print("\nClasse già iterata 3 volte, passa alla prossima classe o al prossimo progetto")
@@ -175,8 +180,8 @@ class OriginalFlow(Flow[ExampleFlow]):
             self.state.validate= ""
             self.state.errors= ""
             self.state.tentativi = 0   #riazzero tentativi per la prossima classe
-            self.state.value_metric_pre = 0
-            self.state.value_metric_post = 0
+            #self.state.value_metric_pre = 0
+            #self.state.value_metric_post = 0
 
 
 
@@ -192,14 +197,12 @@ def plot():
 
 if __name__ == "__main__":
     #warnings.filterwarnings("ignore")
-
-
     validator = Validation()
+
 # COMMENTA PROSSIME 4 RIGHE DOPO LA PRIMA ESECUZIONE !!!
     #validator.clone_progetti_Git()
     #validator.creazione_progetti_Sonar()
     #validator.risultati_pre_refactoring()
-    #print(pd.read_csv("attributes_before_refactoring").to_string())
     start_time = time.time()
     kickoff()
     print(f"TENTATIVI TOTALI= {tentativi_tot}")
@@ -208,6 +211,7 @@ if __name__ == "__main__":
 
     plot()   #del Flow
 
+    print(F"TEMPI: {tempo_per_progetto}")
     print(pd.read_csv("attributes_before_refactoring").to_string())
     validator.risultati_post_refactoring()
     print(pd.read_csv("attributes_post_refactoring").to_string())

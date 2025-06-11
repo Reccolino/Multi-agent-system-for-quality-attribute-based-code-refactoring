@@ -10,7 +10,6 @@
     <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-vmd" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq-monopoliduoproject" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq-progettolpoantonacci" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq-teamtest" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq2-daltrio" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq2-polimono" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/risiko-univaq-masterminds" vcs="Git" />

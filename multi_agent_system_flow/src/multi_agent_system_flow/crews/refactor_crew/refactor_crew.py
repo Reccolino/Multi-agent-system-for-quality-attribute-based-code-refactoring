@@ -9,7 +9,10 @@ from typing import List, Optional, Any
 
 from crewai.tasks.conditional_task import ConditionalTask
 from crewai.tools import tool
+from crewai_tools.tools.code_docs_search_tool.code_docs_search_tool import CodeDocsSearchTool
 from crewai_tools.tools.file_writer_tool.file_writer_tool import FileWriterTool
+from crewai_tools.tools.serper_dev_tool.serper_dev_tool import SerperDevTool
+from crewai_tools.tools.website_search.website_search_tool import WebsiteSearchTool
 from pydantic import BaseModel
 
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import DIRECTORY, HEADER
@@ -36,10 +39,6 @@ def sonar_scanner(path_class: str):
     project_key = parts[1]
     print("PROJECT KEY: ", project_key)
 
-    ''''#QUESTO SOLO PER PROGETTI LPO
-    directory_pom = parts[2]
-    print("DIRECTORY POM: ", directory_pom)'''
-
     directory_pom = ""
     #print(os.walk(path_class))
     for root, dir, files in os.walk(f"{DIRECTORY}/{project_key}"):
@@ -57,8 +56,6 @@ def sonar_scanner(path_class: str):
             "-DskipTests"
         ],
             #cwd=os.path.join("cloned_repos_lpo", project_key),
-
-            #QUESTO SOLO PER PROGETTI LPO
             cwd=os.path.join(directory_pom),
             capture_output=True,
             text=True,
@@ -122,6 +119,8 @@ def code_replace(path_class: str, code: str) -> str:
         return f"Errore durante code replace: {e}"
 
 
+#search_tool = WebsiteSearchTool()
+#code_tool = CodeDocsSearchTool(docs_url="https://devdocs.io/openjdk/")
 
 
 class RefactoringVerificator(BaseModel):
@@ -188,11 +187,12 @@ class RefactorCrew:
         model="mistral/codestral-2501",
         api_key=os.getenv("MISTRAL_API_KEY"),
         stream=True,
-        temperature=0.1,
-        top_p=0.6,
-        frequency_penalty=0.1,
-        presence_penalty=0.1,
-        seed=42,
+        temperature=0.2,
+        top_p=1.0,
+        frequency_penalty=0.2,
+        presence_penalty=0.0,
+        n=1,
+        reasoning_effort="high"
         #stop=["###FINE"]
      )
 
@@ -251,14 +251,17 @@ class RefactorCrew:
     def task1(self) -> Task:
         return Task(
             config=self.tasks_config['task1'],  # type: ignore[index]
-            verbose=True
+            verbose=True,
+            #tools=[search_tool]
+
         )
 
     @task
     def task2(self) -> Task:
         return Task(
             config=self.tasks_config['task2'],  # type: ignore[index]
-            verbose=True
+            verbose=True,
+            #tools=[code_tool]
         )
 
     @task

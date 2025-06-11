@@ -119,58 +119,6 @@ class Validation(BaseValidation):
 
             restituisci_metriche_post_kickoff(project)
 
-        grafici(FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING)
+        #grafici(FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING)
 
-
-
-
-
-
-
-#validator = Validation()
-#validator.clone_progetti_Git()
-#validator.creazione_progetti_Sonar()
-#validator.risultati()
-#print(pd.read_csv("attributes_before_refactoring").to_string())
-
-'''param = {
-    "component": f"Progetto_gioco-oca-univaq-vmd",
-    "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
-    # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
-    # "blocker_violations,critical_violations",
-        "security_rating, vulnerabilities",
-    "qualifiers": "FIL",
-    "s": "metric",
-    "metricSort": "security_rating",
-    "ps": 1,
-    "asc": "false"
-}
-try:
-    response = requests.get("http://localhost:9000/api/measures/component_tree", headers=HEADER, params=param)
-
-    response.raise_for_status()
-    print(json.dumps(response.json(), indent=4))
-
-    param2={
-        "key": response.json().get("components")[0].get("key")
-    }
-
-    code = requests.get(f"http://localhost:9000/api/sources/raw", headers=HEADER, params=param2)
-    #print(code)
-    #print(code.text)
-    project_root = f"{DIRECTORY}/gioco-oca-univaq-vmd"
-
-    for root, _, files in os.walk(project_root):
-        for file in files:
-            full_path = os.path.join(root, file)
-            if full_path.endswith(os.path.normpath(response.json()["components"][0]["path"])):
-                found_path = full_path
-                print(f"LOCAL PATH= {found_path}" + "\n\nCODE= " + code.text)
-                break
-
-except requests.exceptions.HTTPError as e:
-    print(f"Errore HTTP ({e.response.status_code}), progetto non trovato: {e}")
-
-except requests.exceptions.RequestException as e:
-    print(f"Errore di rete o altro problema nella richiesta: {e}")'''
 

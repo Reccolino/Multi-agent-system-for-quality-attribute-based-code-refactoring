@@ -1,9 +1,10 @@
 import json
+import random
 
 import requests
 
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import HEADER, \
-    FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING, FILE_REPORT_POST_REFACTORING_NEW_CODE
+    FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import scanner_da_terminale, \
     search_pom, elimina_da_locale, crea_report
 
@@ -183,8 +184,38 @@ def restituisci_metriche_post_kickoff(project):
 
 
 def classes_for_project(project):
-    url = "http://localhost:9000/api/measures/component_tree"
 
+    #PER LA RQ1 PRENDO IN MODO RANDOMICO 4 CLASSI
+    url = "http://localhost:9000/api/components/tree"
+    try:
+        params = {
+            "component": f"Progetto_{project}",
+            "qualifiers": "FIL",
+            "ps": 500
+        }
+        response = requests.get(url, headers=HEADER, params=params)
+        comps = response.json()
+        response.raise_for_status()
+        #print(json.dumps(response.json(), indent=4))
+        all_files = comps["components"]
+
+        #filtro SOLO classi JAVA (quindi NO classi xml o altre estensioni)
+        java_files = [file for file in all_files if file["path"].endswith(".java")]
+
+        if len(java_files) >= 6:
+            random_classes = random.sample(java_files, k=6)
+        #random_classes = random.sample(comps["components"], k=6)
+            return random_classes
+
+    except requests.exceptions.HTTPError as e:
+        print(f"Errore HTTP ({e.response.status_code}) durante la ricerca: {e}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Errore di rete o altro problema nella richiesta: {e}")
+
+
+    # PER LA RQ2 PRENDO LE CLASSI IN BASE ALL'ORDINAMENTO DI UNA METRICA SCELTA
+    '''url = "http://localhost:9000/api/measures/component_tree"
     param = {
         "component": f"Progetto_{project}",
         "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
@@ -194,7 +225,7 @@ def classes_for_project(project):
         "qualifiers": "FIL",
         "s": "metric",
         "metricSort": "vulnerabilities",
-        "ps": 3,
+        "ps": 4,
         "asc": "false"
     }
     try:
@@ -203,14 +234,8 @@ def classes_for_project(project):
         response.raise_for_status()
         print(json.dumps(response.json(), indent=4))
         #print(response)
-        return response
+        return response'''
 
-    except requests.exceptions.HTTPError as e:
-        print(f"Errore HTTP ({e.response.status_code}) durante la ricerca: {e}")
-
-    except requests.exceptions.RequestException as e:
-        print(f"Errore di rete o altro problema nella richiesta: {e}")
-    # "http://localhost:9000/api/qualitygates/project_status?projectKey=progetto-java"  ULR per vedere se il progetto passa il Quality Gate
 
 
 
