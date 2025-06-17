@@ -1,56 +1,60 @@
-import json
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import Final
 from git import Repo
 import requests
 
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import header_git, DIRECTORY_REPOS, \
     APACHE_PATH, LPO_PATH
-from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_methods import crea_progetto, \
-     restituisci_metriche_pre_kickoff, restituisci_metriche_post_kickoff
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_methods import create_project, \
+     returns_metrics_pre_kickoff, returns_metrics_post_kickoff
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import final_report_excel
 
 
 class BaseValidation(ABC):
 
    @abstractmethod
-   def clone_progetti_apache(self):
+   def clone_apache_projects(self):
        pass
 
    @abstractmethod
-   def clone_progetti_lpo(self):
+   def clone_lpo_projects(self):
        pass
 
-   #i clone li tengo separati perchè hanno una logica leggermente diversa nella lettura del JSON (anche se era
-   #possibile crere un solo metodo e controllare la directory con un if, ma si è preferiti fare cosi)
+   # I keep the clones separate because they have slightly different logic when reading the JSON
+   # (even though it would have been possible to create a single method and check the directory with an if,
+   # this approach was preferred)
 
    @abstractmethod
-   def creazione_progetti_Sonar(self, directory):
+   def creation_sonar_projects(self, directory):
        """
-       Crea i progetti locali su SonarQube
-       Args:
-           directory: directory che contiene tutti i progetti salvati in locale
-       """
+        Creates the local projects on SonarQube.
+        Args:
+            directory: directory containing all the projects saved locally
+        """
+
        pass
 
    @abstractmethod
-   def risultati_pre_refactoring(self, directory):
+   def results_pre_refactoring(self, directory):
        """
-       Visualizzazione dei risultati dell'analisi statica che SonarQube ha effettuato per ogni progetto.
-       Pulizia dei progetti: eliminazione di quelli non significativi ai fini dell'approccio
+        Displays the results of the static analysis performed by SonarQube for each project.
+        Project cleanup: removal of projects that are not meaningful for the approach.
+
+        Return:
+            DataFrame with the pre-refactoring results
+        """
+
+       pass
+
+   @abstractmethod
+   def results_post_refactoring(self, directory):
+       """
+       Displays the results of the static analysis performed by SonarQube for each project, after the MAS refactoring.
 
        Return:
-          Dataframe con i risultati pre refactoring
-       """
-       pass
-
-   @abstractmethod
-   def risultati_post_refactoring(self, directory):
-       """
-       Visualizzazione dei risultati dell'analisi statica che SonarQube ha effettuato per ogni progetto, dopo il refactoring del MAS.
-       Creazione grafici per trovare differenze fra prima e dopo refactoring.
+           - Dataframe with the post-refactoring results
+           - Excel of pre and post datafraes
        """
        pass
 
@@ -61,75 +65,72 @@ class Validation(BaseValidation):
 
 
 
-    def clone_progetti_apache(self):
+    def clone_apache_projects(self):
 
         repos_url= "https://api.github.com/search/repositories?q=apache+commons+language:java&per_page=10"
 
         response = requests.get(repos_url, headers=header_git)
         repos = response.json()
-        #path = f"{DIRECTORY_REPOS}"
-        #print(json.dumps(repos, indent=3))
 
         for repository in repos["items"]:
             clone_url = repository.get("clone_url")
-            print(f"Clonando {clone_url}")
+            print(f"Cloning {clone_url}")
             path_destinazione = f"{DIRECTORY_REPOS}{APACHE_PATH}{repository.get("name")}"
 
             Repo.clone_from(clone_url, path_destinazione)
-            time.sleep(2)  # pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)
+            time.sleep(2)  # pause between projects to avoid overloading the Git server (and thus prevent being blocked)
 
 
 
 
-    def clone_progetti_lpo(self):
+
+    def clone_lpo_projects(self):
         repos_url = f"https://api.github.com/orgs/LPODISIM2024/repos?type=private"
 
         response = requests.get(repos_url, headers=header_git)
         repos = response.json()
-        # path = f"{DIRECTORY_REPOS}"
-        # print(json.dumps(repos, indent=3))
 
         for repository in repos:
             url = repository.get("clone_url")
-            print(f"Clonando {url}")
+            print(f"Cloning {url}")
             path_destinazione = f"{DIRECTORY_REPOS}{LPO_PATH}{repository.get("name")}"
 
             Repo.clone_from(url, path_destinazione)
-            time.sleep(2)  # pausa tra un project e un altro per non sovraccaricare server Git (quindi per non farmi bloccare)
+            time.sleep(2)  # pause between projects to avoid overloading the Git server (and thus prevent being blocked)
 
 
 
-    def creazione_progetti_Sonar(self, dir):
+    def creation_sonar_projects(self, dir):
 
         for repository in os.listdir(dir):
 
             if repository.startswith("."):    #come cartella .git
                 continue
 
-            crea_progetto(repository)
+            create_project(repository)
 
 
 
 
-    def risultati_pre_refactoring(self, dir):
-
-        for project in os.listdir(dir):
-
-            if project.startswith("."):  # come cartella .git
-                continue
-
-            restituisci_metriche_pre_kickoff(project)
-
-
-
-    def risultati_post_refactoring(self, dir):
+    def results_pre_refactoring(self, dir):
 
         for project in os.listdir(dir):
 
             if project.startswith("."):  # come cartella .git
                 continue
 
-            restituisci_metriche_post_kickoff(project)
+            returns_metrics_pre_kickoff(project)
+
+
+
+    def results_post_refactoring(self, dir):
+
+        for project in os.listdir(dir):
+
+            if project.startswith("."):  # come cartella .git
+                continue
+
+            returns_metrics_post_kickoff(project)
 
         final_report_excel()
 

@@ -6,148 +6,135 @@ import requests
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import HEADER, \
     FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import scanner_da_terminale, \
-    search_pom, elimina_da_locale, crea_report
+    search_pom, delete_locally, create_report
 
 
-def crea_progetto(project):
+def create_project(project):
     url = "http://localhost:9000/api/projects/create"
 
     param = {
-        "name": f"Progetto_{project}",
-        "project": f"Progetto_{project}"
+        "name": f"Project_{project}",
+        "project": f"Project_{project}"
     }
     try:
         response = requests.post(url, headers=HEADER, params=param)
 
         response.raise_for_status()
-        print(f"Progetto_{project} creato")
+        print(f"Project_{project} created")
         pom_path = search_pom(project)
 
         if pom_path is not None:
            scanner_da_terminale(param, pom_path)
 
     except requests.exceptions.HTTPError as e:
-        print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_{project}: {e}")
+        print(f"HTTP Error({e.response.status_code}) during the creation of Project_{project}: {e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Errore di rete o altro problema nella richiesta: {e}")
+        print(f"Network error or other issue in the request: {e}")
 
 
 
-def elimina_progetto(project):
+def delete_project(project):
     url = "http://localhost:9000/api/projects/delete"
 
     param = {
-        "project": f"Progetto_{project}"
+        "project": f"Project_{project}"
     }
 
     try:
         response = requests.post(url, headers=HEADER, params=param)
 
         response.raise_for_status()
-        print(f"Progetto {project} eliminato da SonarQube")
+        print(f"Project {project} delete from SonarQube")
 
     except requests.exceptions.HTTPError as e:
-        print(f"Errore HTTP ({e.response.status_code}) durante l'eliminazione da SonarQube: {e}")
+        print(f"HTTP Error ({e.response.status_code}) during the deletion from SonarQube: {e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Errore di rete o altro problema nella richiesta: {e}")
+        print(f"Network error or other issue in the request: {e}")
 
 
 
-def restituisci_metriche_pre_kickoff(project):
+def returns_metrics_pre_kickoff(project):
     url = "http://localhost:9000/api/measures/component"
     param = {
-        "component": f"Progetto_{project}",
+        "component": f"Project_{project}",
         "metricKeys": "ncloc,bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
                       "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
                       "blocker_violations,critical_violations"
     }
     '''
-    Size:
-    ncloc, files, functions, classes, directories
-    Complexity:
-    complexity, cognitive_complexity, function_complexity
-    Coverage:
-    coverage, line_coverage, branch_coverage, lines_to_cover
-    Duplication:
-    duplicated_lines_density, duplicated_blocks, duplicated_files
-    Reliability:
-    bugs, new_bugs, reliability_rating
-    Maintainability:
-    code_smells, new_maintainability_rating
-    Security:
-    vulnerabilities, new_vulnerabilities, security_rating
-    Test:
-    tests, test_success_density, test_errors, test_failures
-    Documentation:
-    comment_lines, comment_lines_density
-    Technical Debt:
-    sqale_index(technical debt in minutes), sqale_debt_ratio, sqale_rating
-    Issues:
-    blocker_violations, critical_violations, major_violations, minor_violations
-    Quality Gate:
-    alert_status, quality_gate_details'''
+    POSSIBLE METRICS :
+        Size:
+        ncloc, files, functions, classes, directories
+        Complexity:
+        complexity, cognitive_complexity, function_complexity
+        Coverage:
+        coverage, line_coverage, branch_coverage, lines_to_cover
+        Duplication:
+        duplicated_lines_density, duplicated_blocks, duplicated_files
+        Reliability:
+        bugs, new_bugs, reliability_rating
+        Maintainability:
+        code_smells, new_maintainability_rating
+        Security:
+        vulnerabilities, new_vulnerabilities, security_rating
+        Test:
+        tests, test_success_density, test_errors, test_failures
+        Documentation:
+        comment_lines, comment_lines_density
+        Technical Debt:
+        sqale_index(technical debt in minutes), sqale_debt_ratio, sqale_rating
+        Issues:
+        blocker_violations, critical_violations, major_violations, minor_violations
+        Quality Gate:
+        alert_status, quality_gate_details'''
 
-    # al posto di fare due chiamate (una per vedere se il progetto è presente su Sonar e una per mostrare le metriche dei progetti)
-    # ne faccio una sola che fa entrambe le funzioni: uso la chiamata delle metriche --> se mi restituisce 4040 significa che
-    # il progetto non è presente su Sonar e, quindi, va eliminato
 
     try:
         response = requests.get(url, headers=HEADER, params=param)
 
         response.raise_for_status()
-        # in questo caso 404 non mi deve generare l'eccezione: voglio esplicitamente controllare
-        # se la response sia 404 per eliminare il progetto
 
-        # SUPPONENDO che l'url sia corretto (se una metricKey è sbagliata ritorna 404 anche in quel caso) --> forse è da migliorare
-        # if response.status_code == 404:  # se il progetto è mancante la chiamata restituirà 404
-        #  print("Progetto mancante in SonarQube  --> allora va eliminato in locale")
-        #  self.elimina_da_locale(project)
-        # return
-
-        # print(f"L'analisi di {project} ha restituito: {response.json()}")
-        # print(response.json().get("component").get("measures")[2].get("value"))
-        # se il progetto è su SonarQube, ma lo scanner aveva dato problemi, allora quel progetto è rimasto su Sonar
-        # ma senza l'analisi statica del codice. Questo significa che è un progetto inutile che va tolto da Sonar (e in locale)
+        #If the project is on SonarQube, but the scanner had issues,
+        #then the project remains on Sonar without static code analysis.
+        #This means it is a useless project that should be removed from Sonar (and locally).
         if not (response.json().get("component").get("measures")):
-            # print("Json vuoto")
-            print(f"WEEEEE {response.json().get("component").get("measures")}")
-            print("Elimina progetto da SonarQube e in locale perchè non ha passato il SonarScanner")
-            elimina_progetto(project)
-            elimina_da_locale(project)
+            print("Delete the project from SonarQube and locally because it did not pass SonarScanner")
+            delete_project(project)
+            delete_locally(project)
 
         elif int(response.json().get("component").get("measures")[8].get("value")) < 800:
-            print("Elimina progetto da SonarQube e in locale perchè ha meno di 800 righe di codice")
-            elimina_progetto(project)
-            elimina_da_locale(project)
+            print("Delete the project from SonarQube and locally because it has fewer than 800 lines of code")
+            delete_project(project)
+            delete_locally(project)
 
         else:
-            crea_report(response.json(), project, FILE_REPORT_PRE_REFACTORING)
+            create_report(response.json(), project, FILE_REPORT_PRE_REFACTORING)
 
 
     except requests.exceptions.HTTPError as e:
         error_response = e.response.json()
         error_msg = error_response.get("errors", [{}])[0].get("msg", "No message")
         if "Component" in error_msg:
-            print("Errore: Progetto non trovato.")
-            elimina_da_locale(project)
+            print("Error: Project not found")
+            delete_locally(project)
         elif "metric" in error_msg:
-            print("Errore: MetricKey non valida.")
+            print("Error: MetricKey not valid.")
         else:
-            print(f"Errore sconosciuto: {error_msg}")
+            print(f"Unknown error: {error_msg}")
         # print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_codec: {e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Errore di rete o altro problema nella richiesta: {e}")
+        print(f"Network error or other issue in the request: {e}")
         return
 
 
 
-def restituisci_metriche_post_kickoff(project):
+def returns_metrics_post_kickoff(project):
     url = "http://localhost:9000/api/measures/component"
     param = {
-        "component": f"Progetto_{project}",
+        "component": f"Project_{project}",
         "metricKeys": "ncloc,bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
                       "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
                       "blocker_violations,critical_violations"
@@ -157,52 +144,33 @@ def restituisci_metriche_post_kickoff(project):
 
         response.raise_for_status()
 
-        crea_report(response.json(), project, FILE_REPORT_POST_REFACTORING)
+        create_report(response.json(), project, FILE_REPORT_POST_REFACTORING)
 
     except requests.exceptions.HTTPError as e:
-        print(f"Errore HTTP ({e.response.status_code}) durante la chiamata: {e}")
+        print(f"HTTP Error ({e.response.status_code}) during the call: {e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Errore di rete o altro problema nella richiesta: {e}")
+        print(f"Network error or other issue in the request: {e}")
 
-    '''try:
-        new_code_params = param.copy()
-        new_code_params.update({
-            "metricKeys": "new_ncloc,new_bugs,new_vulnerabilities,new_code_smells,new_coverage,new_duplicated_lines_density,"
-                          "new_reliability_rating,new_sqale_rating,new_security_rating,new_cognitive_complexity,"
-                          "new_blocker_violations,new_critical_violations",
-            "additionalFields": "period",
-            #"strategy": "new_code_period"
-        })
-
-        response = requests.get(url, headers=HEADER, params=new_code_params)
-        response.raise_for_status()
-        crea_report(response.json(), project, FILE_REPORT_POST_REFACTORING_NEW_CODE)
-
-    except requests.exceptions.HTTPError as e:
-        print(f"[NEW CODE] Errore HTTP ({e.response.status_code}): {e}")
-    except requests.exceptions.RequestException as e:
-        print(f"[NEW CODE] Errore di rete: {e}")'''
 
 
 
 def classes_for_project(project):
 
-    #PER LA RQ1 PRENDO IN MODO RANDOMICO 4 CLASSI
+    #FOR THE RQ2 I TAKE RANDOMLY 4 CLASSES
     url = "http://localhost:9000/api/components/tree"
     try:
         params = {
-            "component": f"Progetto_{project}",
+            "component": f"Project_{project}",
             "qualifiers": "FIL",
             "ps": 500
         }
         response = requests.get(url, headers=HEADER, params=params)
         comps = response.json()
         response.raise_for_status()
-        #print(json.dumps(response.json(), indent=4))
         all_files = comps["components"]
 
-        #filtro SOLO classi JAVA (quindi NO classi xml o altre estensioni)
+        #filter ONLY JAVA classes (so NO xml classes or other extensions)
         java_files = [file for file in all_files if file["path"].endswith(".java")]
 
         if len(java_files) >= 6:
@@ -211,16 +179,17 @@ def classes_for_project(project):
             return random_classes
 
     except requests.exceptions.HTTPError as e:
-        print(f"Errore HTTP ({e.response.status_code}) durante la ricerca: {e}")
+        print(f"HTTP Error ({e.response.status_code}) during the research: {e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Errore di rete o altro problema nella richiesta: {e}")
+        print(f"Network error or other issue in the request: {e}")
 
 
-    # PER LA RQ2 PRENDO LE CLASSI IN BASE ALL'ORDINAMENTO DI UNA METRICA SCELTA
+#-------------------------------RESEARCH QUESTION 3--------------------------------------------------#
+
     '''url = "http://localhost:9000/api/measures/component_tree"
     param = {
-        "component": f"Progetto_{project}",
+        "component": f"Project_{project}",
         "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
         # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
         # "blocker_violations,critical_violations",
@@ -239,6 +208,7 @@ def classes_for_project(project):
         #print(response)
         return response'''
 
+#---------------------------------------------------------------------------------------------------#
 
 
 
@@ -258,10 +228,10 @@ def esec_class(classe):
         return response
 
     except requests.exceptions.HTTPError as e:
-        print(f"Errore HTTP ({e.response.status_code}) durante la ricerca: {e}")
+        print(f"HTTP Error ({e.response.status_code}) during the research: {e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Errore di rete o altro problema nella richiesta: {e}")
+        print(f"Network error or other issue in the request: {e}")
 
 
 
@@ -281,15 +251,14 @@ def metrics(classe):
 
         response.raise_for_status()
         print(json.dumps(response.json(), indent=4))
-        #i controlli li ho già fatti tutti nella fase di validation
+        #I have already done all the checks during the validation phase
         return response.json().get("component").get("measures")[0].get("value")
 
     except requests.exceptions.HTTPError as e:
-        print(f"Errore sconosciuto: {e}")
-        # print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_codec: {e}")
+        print(f"Unknown Error: {e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Errore di rete o altro problema nella richiesta: {e}")
-        #return
+        print(f"Network error or other issue in the request: {e}")
+
 
 

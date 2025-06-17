@@ -26,7 +26,7 @@ task1:
         5. **Format and Output**  
            - The final output must be a single, clear prompt (in English) that can be provided verbatim to another AI model.  
            - Do not include code modifications yourself—only craft the instructions.  
-           - Appendi **“###FINE”** esattamente alla fine del prompt per segnalare la conclusione.
+           - Append “###FINE” exactly at the end of the prompt to indicate the conclusion.
 
     expected_output: |
       A single, self-contained English prompt that:
@@ -72,57 +72,60 @@ task2:
 
 task3:
     description: >
-            Fai code replace in: {path_class} del codice refattorizzato dalla task precedente.
+            Do a code replace in: {path_class} using the refactored code from the previous task.
 
     expected_output: >
-            Se il code replace è andato a buon fine
+            If the code replacement was successful.
     context:
       - task2
-    agent: code_replace_agent
+    agent: code_replacer
 
 
 
 task4:
-    description: >
-           Esegui comandi da terminale passando al tool sonarscanner il {path_class}.
+   description: >
+        Execute terminal commands passing the {path_class} to the SonarScanner tool.
 
-    expected_output: |
-            Se lo scanner è andato a buon fine, senza restituire il codice e gli errori
+   expected_output: |
+        If the scanner completed successfully, without returning code or errors
 
-    agent: sonar_agent
+   agent: sonar_agent
 
 
 
 conditional_task5:
-     description: |
-            Fai code replace di:
-            {code_class}
-            ovvero il codice iniziale in {path_class},
-            perchè, evidentemente, ci sono stati degli errori nel codice refattorizzato da task precedenti. Quindi
-            riporta il codice iniziale nel posto giusto.
+    description: |
+        Perform a code replacement of:
+        {code_class}
+        which is the original code in {path_class},
+        because evidently there were errors in the refactored code from previous tasks. Therefore,
+        restore the original code in the correct place.
 
-     expected_output: >
-            Se il code replace è andato a buon fine, senza restituire il codice.
+    expected_output: >
+        If the code replacement was successful, without returning the code.
 
-     agent: code_replace_agent
+    agent: code_replacer
 
 
 
 
 conditional_task6:
-     description: >
-           Hai ricevuto in input una lista di errori SonarScanner provenienti dalla task4.
-           Obiettivo: restituisci un riassunto chiaro e conciso dei principali problemi rilevati da Sonar
-     expected_output: |
-           Ritorna JSON con :
-           - "valid" : con il valid restituito da task4
-           - "errors" : il riassunto degli errori di task4, del tipo:
-             - [Tipo di errore]: breve descrizione e suggerimento.
-             - [Altro tipo]: ...
-           IMPORTANTE: il campo `"valid"` nel JSON di output deve corrispondere
-           senza alcuna modifica a valid di task4
-     context:
+    description: >
+        You have received as input a list of SonarScanner errors from task4.
+        Objective: provide a clear and concise summary of the main issues detected by Sonar.
+
+    expected_output: |
+        Return a JSON containing:
+        - "valid": with the valid value returned from task4
+        - "errors": a summary of task4 errors, such as:
+          - [Error Type]: brief description and suggestion.
+          - [Another Type]: ...
+        IMPORTANT: the "valid" field in the output JSON must exactly match
+        the "valid" from task4 without any modification.
+
+    context:
        - task4
-     agent: riassunto_errori
+
+    agent: error_summarizer
 
 
