@@ -78,7 +78,7 @@ code_refactor:
 
 
 code_replace_agent:
-      #name = "UpdaterAndScanner",
+
       role: >
           Code replacer
       goal: >
@@ -90,7 +90,7 @@ code_replace_agent:
 
 
 sonar_agent:
-      #name = "UpdaterAndScanner",
+
       role: >
            SonarQube expert
       goal: >

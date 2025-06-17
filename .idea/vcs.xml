@@ -2,16 +2,22 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-fsociety" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-let" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-rasputeam" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-the-debuggers" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-untitled-goose-alliance" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/gioco-oca-univaq-vmd" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq-monopoliduoproject" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq-progettolpoantonacci" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq2-daltrio" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/monopoli-univaq2-polimono" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/risiko-univaq-masterminds" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/apache/commons-codec" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/apache/commons-compress" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/apache/commons-dbcp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/apache/commons-lang" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/apache/commons-math" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/apache/commons-pool" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/gioco-oca-univaq-fsociety" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/gioco-oca-univaq-let" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/gioco-oca-univaq-rasputeam" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/gioco-oca-univaq-the-debuggers" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/gioco-oca-univaq-untitled-goose-alliance" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/gioco-oca-univaq-vmd" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/monopoli-univaq-monopoliduoproject" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/monopoli-univaq-progettolpoantonacci" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/monopoli-univaq2-daltrio" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/monopoli-univaq2-polimono" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/lpo/risiko-univaq-masterminds" vcs="Git" />
   </component>
 </project>

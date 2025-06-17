@@ -22,7 +22,9 @@ def crea_progetto(project):
         response.raise_for_status()
         print(f"Progetto_{project} creato")
         pom_path = search_pom(project)
-        scanner_da_terminale(param, pom_path)  # os.path.join(DIRECTORY, pom_path))
+
+        if pom_path is not None:
+           scanner_da_terminale(param, pom_path)
 
     except requests.exceptions.HTTPError as e:
         print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_{project}: {e}")
@@ -110,6 +112,7 @@ def restituisci_metriche_pre_kickoff(project):
         # ma senza l'analisi statica del codice. Questo significa che è un progetto inutile che va tolto da Sonar (e in locale)
         if not (response.json().get("component").get("measures")):
             # print("Json vuoto")
+            print(f"WEEEEE {response.json().get("component").get("measures")}")
             print("Elimina progetto da SonarQube e in locale perchè non ha passato il SonarScanner")
             elimina_progetto(project)
             elimina_da_locale(project)
@@ -290,21 +293,3 @@ def metrics(classe):
         #return
 
 
-'''def check_quality_gates(path_class: str):
-    """
-    Esegue comandi Maven e di SonarScanner nella root del progetto
-    :param path_class:
-    :return: True if Build Success, False if Build Failure with errors
-    """
-    project_key = path_class.split('/')[2]
-    print("PROJECT KEY:  "+project_key)
-
-
-    try:
-        response = requests.get(
-            "http://localhost:9000/api/qualitygates/project_status",
-            params={"projectKey": "your_project_key"},
-            auth=("your_api_key", "")  # Username è la API key, password vuota
-        )
-    except subprocess.CalledProcessError as e:
-        return RefactoringVerificator(valid=False, errors=e.stdout)'''

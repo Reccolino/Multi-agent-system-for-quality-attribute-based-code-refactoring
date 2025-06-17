@@ -7,8 +7,10 @@ import pandas as pd
 from pydantic import BaseModel
 
 from crewai.flow.flow import Flow, listen, start, or_, router
+from scipy.optimize import direct
 
-from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.validation import DIRECTORY, Validation
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import APACHE_PATH, LPO_PATH
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.validation import DIRECTORY_REPOS, Validation
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.refactor_crew.refactor_crew import RefactorCrew
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_methods import classes_for_project, \
     esec_class, metrics
@@ -18,6 +20,7 @@ tentativi_tot: int = 0
 tempo_per_progetto: List[float] = []
 
 class ExampleFlow(BaseModel):
+    directory: str = ""     #directory su cui fare esecuzione
     project_list: List[str] = []      #lista di progetti
     current_project: Optional[int] = 0    #serve a indicare quale progetto si sta elaborando
     classi: List[dict] = []     #lista di classi di un progetto
@@ -25,7 +28,7 @@ class ExampleFlow(BaseModel):
     path_class: str = ""     #path della classe da passare alla Crew per poter fare code replace e per poter eseguire sonarScanner
     code_class: str = ""     #codice della classe da passare alla Crew per poter fare refactoring
     errors: Optional[str] = ""         #errori (di compilazione o altri) da passare alla Crew per indirizzare agente a non commetterli
-    validate: bool        #flag che verifica se il comando da terminale per una classe ha restituito Build Success o Build Failure
+    is_validate: Optional[bool] = True        #flag che verifica se il comando da terminale per una classe ha restituito Build Success o Build Failure
     tentativi: Optional[int] = 0    #contatore per tenere traccia del numero di tentativi su una singola classe
     #value_metric_pre: Optional[int] = 0   #DA SCOMMENTARE PER LA RQ2
     #value_metric_post: Optional[int] = 0   #DA SCOMMENTARE PER LA RQ2
@@ -39,10 +42,12 @@ class OriginalFlow(Flow[ExampleFlow]):
         Metodo che carica tutti i progetti nella project_list. Da qui si potrà accedere ai singoli progetti e alle classi dei progetti
         """
         global tempo_per_progetto
-        self.state.project_list = [repository for repository in os.listdir("./cloned_repos_lpo")]
+        self.state.project_list = [repository for repository in os.listdir(self.state.directory)]
         print(self.state.project_list)
         tempo_per_progetto = [0.0 for _ in self.state.project_list]
         self.state.project_start_times = [0.0 for _ in self.state.project_list]
+
+
 
     @router(or_("init", "classes_for_project", "refactor_code"))
     def router(self, _=None):
@@ -57,7 +62,6 @@ class OriginalFlow(Flow[ExampleFlow]):
 
         #Se ho ancora classi residue per questo progetto
         if self.state.current_class < len(self.state.classi):
-            self.state.project_start_times[self.state.current_project] = time.time()
             return "percorso_classe"
 
 
@@ -83,6 +87,7 @@ class OriginalFlow(Flow[ExampleFlow]):
             Restituisce: il path della classe con peggior security_rating via SonarQube e il codice di quella classe .
             Effettua una GET su /api/measures/component_tree e ordina per security_rating  .
         """
+        self.state.project_start_times[self.state.current_project] = time.time()   #faccio partire tempo per progetto
 
         response = classes_for_project(self.state.project_list[self.state.current_project])
 
@@ -115,7 +120,7 @@ class OriginalFlow(Flow[ExampleFlow]):
 
             #self.state.value_metric_pre = int(metrics(classe_attuale.get("key")))  #DA SCOMMENTARE PER LA RQ2
 
-            project_root = f"{DIRECTORY}/{self.state.project_list[self.state.current_project]}"
+            project_root = f"{self.state.directory}{self.state.project_list[self.state.current_project]}"
 
             # PER PROGETTI LPO BISOGNA TROVARE PATH CORRETTO PERCHE NON è IMMEDIATO COME PROGETTI APACHE
             for root, _, files in os.walk(project_root):
@@ -144,18 +149,18 @@ class OriginalFlow(Flow[ExampleFlow]):
                         "errors": self.state.errors})
 
 
-            self.state.validate = result["valid"]
+            self.state.is_validate = result["valid"]
             self.state.errors = result["errors"].strip() or "errors"
-            #se errors è "" allora self.state.errors lo faccio idventare semplicemente "errors"
+            #se errors è "" allora self.state.errors lo faccio diventare semplicemente "errors"
             #cosi che il templating nella task2 funzioni in entrambi i casi
 
             #self.state.value_metric_post = result["metric"]   #DA SCOMMENTARE PER LA RQ2
 
-            print(f"VALIDATE: {self.state.validate}")
+            print(f"VALIDATE: {self.state.is_validate}")
             #print(f"VALORE METRICA: {self.state.value_metric_pre}")   #DA SCOMMENTARE PER LA RQ2
 
 
-            if self.state.validate:  #vuol dire Build Success
+            if self.state.is_validate:  #vuol dire Build Success
                 '''if self.state.value_metric_post <= self.state.value_metric_pre:   #c'è stato un miglioramento
                     print(f"VULNERABILITIES PRIMA: {self.state.value_metric_pre}")
                     print(f"VULNERABILITIES DOPO: {self.state.value_metric_post}")
@@ -163,7 +168,7 @@ class OriginalFlow(Flow[ExampleFlow]):
                     tentativi_tot += 1
                 else:'''   #DA SCOMMENTARE PER LA RQ2
                 self.state.current_class += 1   #passa alla prossima classe
-                self.state.validate = ""
+                self.state.is_validate = ""
                 self.state.errors = ""
                 self.state.tentativi = 0  # riazzero tentativi per la prossima classe
                 # self.state.value_metric_pre = 0
@@ -177,17 +182,17 @@ class OriginalFlow(Flow[ExampleFlow]):
         else:    #arrivato a N tentativi
             print("\nClasse già iterata 3 volte, passa alla prossima classe o al prossimo progetto")
             self.state.current_class +=1   #passa avanti con la classe
-            self.state.validate= ""
+            self.state.is_validate= ""
             self.state.errors= ""
             self.state.tentativi = 0   #riazzero tentativi per la prossima classe
-            #self.state.value_metric_pre = 0
-            #self.state.value_metric_post = 0
+            #self.state.value_metric_pre = 0      #DA SCOMMENTARE PER LA RQ2
+            #self.state.value_metric_post = 0     #DA SCOMMENTARE PER LA RQ2
 
 
 
-def kickoff():
+def kickoff(directory):
     flow = OriginalFlow()
-    flow.kickoff()
+    flow.kickoff({"directory": directory})
 
 
 def plot():
@@ -196,26 +201,48 @@ def plot():
 
 
 if __name__ == "__main__":
-    #warnings.filterwarnings("ignore")
+
     validator = Validation()
 
-# COMMENTA PROSSIME 4 RIGHE DOPO LA PRIMA ESECUZIONE !!!
-    #validator.clone_progetti_Git()
-    #validator.creazione_progetti_Sonar()
-    #validator.risultati_pre_refactoring()
+    scelta = input("Quale dataset vuoi processare? [lpo/apache/entrambi]: ").strip().lower()
+
     start_time = time.time()
-    kickoff()
-    print(f"TENTATIVI TOTALI= {tentativi_tot}")
-    end_time = time.time() - start_time
-    print(f"Tempo di esecuzione TOTALE= {end_time}")
 
-    plot()   #del Flow
+    if scelta in ["lpo", "entrambi"]:
+        print("\n--- Avvio procedura per LPO ---\n")
+        #commenta prossime 3 righe dopo la prima esecuzione
+        validator.clone_progetti_lpo()
+        validator.creazione_progetti_Sonar(f"{DIRECTORY_REPOS}{LPO_PATH}")
+        validator.risultati_pre_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
+        kickoff(f"{DIRECTORY_REPOS}{LPO_PATH}")
+        print(f"TEMPI LPO: {tempo_per_progetto}")
+        print("Attributi pre-refactoring (LPO):")
+        print(pd.read_csv("attributes_before_refactoring").to_string())
+        validator.risultati_post_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
+        print("Attributi post-refactoring (LPO):")
+        print(pd.read_csv("attributes_post_refactoring").to_string())
 
-    print(F"TEMPI: {tempo_per_progetto}")
-    print(pd.read_csv("attributes_before_refactoring").to_string())
-    validator.risultati_post_refactoring()
-    print(pd.read_csv("attributes_post_refactoring").to_string())
 
+    if scelta in ["apache", "entrambi"]:
+        print("\n--- Avvio procedura per Apache ---\n")
+        #commenta prossime 3 righe dopo la prima esecuzione
+        #validator.clone_progetti_apache()
+        #validator.creazione_progetti_Sonar(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        #validator.risultati_pre_refactoring(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        kickoff(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        print(f"TEMPI Apache: {tempo_per_progetto}")
+        print("Attributi pre-refactoring (Apache):")
+        print(pd.read_csv("attributes_before_refactoring").to_string())
+        validator.risultati_post_refactoring(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        print("Attributi post-refactoring (Apache):")
+        print(pd.read_csv("attributes_post_refactoring").to_string())
+
+
+    print(f"\nTENTATIVI TOTALI= {tentativi_tot}")
+    total_time = time.time() - start_time
+    print(f"Tempo di esecuzione TOTALE= {total_time:.2f} secondi")
+
+    plot()
 
 
 

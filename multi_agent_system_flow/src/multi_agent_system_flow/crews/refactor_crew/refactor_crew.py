@@ -14,8 +14,9 @@ from crewai_tools.tools.file_writer_tool.file_writer_tool import FileWriterTool
 from crewai_tools.tools.serper_dev_tool.serper_dev_tool import SerperDevTool
 from crewai_tools.tools.website_search.website_search_tool import WebsiteSearchTool
 from pydantic import BaseModel
+from spyder.plugins.help.utils.conf import project
 
-from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import DIRECTORY, HEADER
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import DIRECTORY_REPOS, HEADER
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import search_pom
 
 
@@ -36,25 +37,35 @@ def sonar_scanner(path_class: str):
     path_class = os.path.normpath(path_class)
     parts = path_class.split(os.sep)
 
-    project_key = parts[1]
+    project_type = parts[1]
+    project_key = parts[2]
     print("PROJECT KEY: ", project_key)
 
     directory_pom = ""
     #print(os.walk(path_class))
-    for root, dir, files in os.walk(f"{DIRECTORY}/{project_key}"):
+    for root, dir, files in os.walk(f"{DIRECTORY_REPOS}/{project_type}/{project_key}"):
         if "pom.xml" in files:
             directory_pom = root
             break
     print ("POM: "+directory_pom)
+
     try:
-        subprocess.run([
+        comando = [
             "mvn.cmd", "clean", "verify", "org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar" ,
             f"-Dsonar.projectKey=Progetto_{project_key}",
             f"-Dsonar.projectName=Progetto_{project_key}",
             f"-Dsonar.host.url=http://localhost:9000",
-            f"-Dsonar.token={os.getenv("SONAR_LOCAL_API_TOKEN")}",
-            "-DskipTests"
-        ],
+            f"-Dsonar.token={os.getenv("SONAR_LOCAL_API_TOKEN")}"
+        ]
+
+        jacoco_path = os.path.join(directory_pom, "target/site/jacoco/jacoco.xml")
+        if os.path.exists(jacoco_path):  # PER I PROGETTI APACHE
+            comando.append(f"-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml")
+        else:
+            print("Nessun report JaCoCo trovato: la coverage non sarà inclusa in SonarQube.")
+
+
+        result = subprocess.run(comando,
             #cwd=os.path.join("cloned_repos_lpo", project_key),
             cwd=os.path.join(directory_pom),
             capture_output=True,
@@ -62,7 +73,10 @@ def sonar_scanner(path_class: str):
             check=True
         )
         #valid = "BUILD SUCCESS" in result.stdout
+        print("OUTPUT MAVEN:\n", result.stdout)
 
+
+        #PER RQ2
         url = "http://localhost:9000/api/measures/component"
         param = {
             "component": f"Progetto_{project_key}",
@@ -87,7 +101,7 @@ def sonar_scanner(path_class: str):
                 print("Errore: MetricKey non valida.")
             else:
                 print(f"Errore sconosciuto: {error_msg}")
-            # print(f"Errore HTTP ({e.response.status_code}) durante la creazione di ProgettoApache_codec: {e}")
+
 
         except requests.exceptions.RequestException as e:
             print(f"Errore di rete o altro problema nella richiesta: {e}")
@@ -95,7 +109,7 @@ def sonar_scanner(path_class: str):
 
     except subprocess.CalledProcessError as e:
         error_lines = [line for line in e.stdout.splitlines() if "[ERROR]" in line]
-        errors_filtered = "\n".join(error_lines)
+        errors_filtered = "\n".join(error_lines)    #filtro gli errori senza caricare errors con righe inutili
         return RefactoringVerificator(valid=False, errors=errors_filtered, metric=0)
 
 
@@ -119,9 +133,6 @@ def code_replace(path_class: str, code: str) -> str:
         return f"Errore durante code replace: {e}"
 
 
-#search_tool = WebsiteSearchTool()
-#code_tool = CodeDocsSearchTool(docs_url="https://devdocs.io/openjdk/")
-
 
 class RefactoringVerificator(BaseModel):
     valid: bool
@@ -134,7 +145,7 @@ class RefactorCrew:
     """RefactorCrew crew"""
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(**kwargs)   #richiesto da CrewAI
         #attributo per salvare il risultato di task4
         self.refactoring_output: Optional[RefactoringVerificator] = None
 
@@ -144,9 +155,9 @@ class RefactorCrew:
         Lo salviamo nell'attributo self.refactoring_output in modo da poterlo usare
         in tutti i task successivi.
         """
-        if getattr(output, "pydantic", None) is not None:
+        if getattr(output, "pydantic", None) is not None:     #dammi l’attributo pydantic dell’oggetto output se esiste, altrimenti None
             self.refactoring_output = output.pydantic
-            print("Saved refactoring_output:", self.refactoring_output)
+            print("Refactoring_output:", self.refactoring_output)
 
 
     def build_result(self, output: TaskOutput) -> bool:

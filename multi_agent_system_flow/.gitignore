@@ -2,5 +2,5 @@
 __pycache__/
 lib/
 .DS_Store
-multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos_lpo/
+multi_agent_system_flow/src/multi_agent_system_flow/cloned_repos/
 **/.git

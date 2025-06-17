@@ -53,7 +53,7 @@ task2:
              - Do not alter inheritance hierarchies, implemented interfaces, abstract class extensions, or annotations that affect class loading/behavior.
         
           2. **Changes:**  
-             - Be aggressive on code refactoring: null dereferences, insecure inputs, code duplications, high cyclomatic complexity, etc. like SonarQube
+             - Be aggressive on code refactoring, following the prompt of task1
              - I want that you resolve the most problems of the code
              - Only refactor code that directly addresses issues highlighted in task1.  
              - Do not introduce any new compilation or runtime {errors}.  
@@ -112,14 +112,14 @@ conditional_task5:
 conditional_task6:
      description: >
            Hai ricevuto in input una lista di errori SonarScanner provenienti dalla task4.
-           **Obiettivo**: restituisci un riassunto chiaro e conciso dei principali problemi rilevati da Sonar
+           Obiettivo: restituisci un riassunto chiaro e conciso dei principali problemi rilevati da Sonar
      expected_output: |
            Ritorna JSON con :
            - "valid" : con il valid restituito da task4
            - "errors" : il riassunto degli errori di task4, del tipo:
              - [Tipo di errore]: breve descrizione e suggerimento.
              - [Altro tipo]: ...
-           **IMPORTANTE**: il campo `"valid"` nel JSON di output deve corrispondere
+           IMPORTANTE: il campo `"valid"` nel JSON di output deve corrispondere
            senza alcuna modifica a valid di task4
      context:
        - task4
