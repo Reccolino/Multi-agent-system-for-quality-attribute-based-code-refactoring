@@ -2,6 +2,8 @@ import os
 import shutil
 import stat
 import subprocess
+
+import numpy as np
 import pandas as pd
 
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import FILE_REPORT_PRE_REFACTORING, \
@@ -97,7 +99,10 @@ def create_report(data_json, project, data_file):
 
     dati = {
         "Project": [project],
+        "Lines of Code": [metrics_values.get("ncloc", "N/A")],
         "Coverage": [metrics_values.get("coverage", "N/A")],
+        "Test Success Density": [metrics_values.get("test_success_density", "N/A")],
+        "Test Failures": [metrics_values.get("test_failures", "N/A")],
         "Vulnerabilities": [metrics_values.get("vulnerabilities", "N/A")],
         "Security Rating": [metrics_values.get("security_rating", "N/A")],
         "Bugs": [metrics_values.get("bugs", "N/A")],
@@ -115,6 +120,10 @@ def create_report(data_json, project, data_file):
     #if the file .csv already exist, don't repeat Header (Project, Bugs, Coverage, ecc..)
     df.to_csv(f"{data_file}",mode='a', index=False, header=not file_exist)
 
+    '''latex_table = df.to_latex(index=False, caption="Valori metriche dei progetti", label="tab:metricsValue", longtable=False, escape=False)
+
+    with open("metrics-table.tex", "w") as f:
+        f.write(latex_table)'''
 
 
 
@@ -124,3 +133,25 @@ def final_report_excel():
 
     df_pre.to_excel(f"{FILE_REPORT_PRE_REFACTORING}.xlsx", index=False)
     df_post.to_excel(f"{FILE_REPORT_POST_REFACTORING}.xlsx", index=False)
+
+    df_pre.set_index("Project", inplace=True)
+    df_post.set_index("Project", inplace=True)
+
+    df_diff_percent = (df_post - df_pre) / df_pre * 100
+
+    df_diff_percent = df_diff_percent.fillna(0.0)   #replace the NaN with 0.0
+    #positive_if_increases = ["coverage", "test_success_density"]
+
+    def format_percentage(x):
+
+        if x > 0:
+            return f"+{x:.2f}%"
+        elif x < 0:
+            return f"{x:.2f}%"
+        else:
+            return "-"    #when there is not improvement
+
+
+    df_diff_percent = df_diff_percent.map(format_percentage)
+
+    df_diff_percent.to_excel("refactoring_percentage_change.xlsx")

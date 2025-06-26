@@ -67,7 +67,7 @@ class Validation(BaseValidation):
 
     def clone_apache_projects(self):
 
-        repos_url= "https://api.github.com/search/repositories?q=apache+commons+language:java&per_page=10"
+        repos_url= "https://api.github.com/search/repositories?q=apache+commons+language:java&per_page=17"
 
         response = requests.get(repos_url, headers=header_git)
         repos = response.json()
@@ -116,10 +116,11 @@ class Validation(BaseValidation):
 
         for project in os.listdir(dir):
 
-            if project.startswith("."):  # come cartella .git
+            if project.startswith("."):  #as .git
                 continue
 
             returns_metrics_pre_kickoff(project)
+            time.sleep(3)
 
 
 
@@ -127,10 +128,11 @@ class Validation(BaseValidation):
 
         for project in os.listdir(dir):
 
-            if project.startswith("."):  # come cartella .git
+            if project.startswith("."):  #as .git
                 continue
 
             returns_metrics_post_kickoff(project)
+            time.sleep(3)
 
         final_report_excel()
 

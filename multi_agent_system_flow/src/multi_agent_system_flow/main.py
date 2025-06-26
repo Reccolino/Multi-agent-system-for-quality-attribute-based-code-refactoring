@@ -1,8 +1,10 @@
 import os
+import random
 import time
 import warnings
 from typing import List, Optional
 import pandas as pd
+import requests
 
 from pydantic import BaseModel
 from crewai.flow.flow import Flow, listen, start, or_, router
@@ -15,6 +17,7 @@ from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_
 ATTEMPTS_MAX: int = 3
 attempts_tot: int = 0
 time_for_project: List[float] = []
+CLASSES_TO_REFACTOR = 5
 
 class ExampleFlow(BaseModel):
     directory: str = ""      #directory where execution takes place
@@ -31,7 +34,19 @@ class ExampleFlow(BaseModel):
     #value_metric_post: Optional[int] = 0   #FOR RQ3
     project_start_times: List[float] = []    #list of start execution time for every project
 
+
+
+
 class OriginalFlow(Flow[ExampleFlow]):
+
+    def preparing_new_class(self):
+        self.state.current_class += 1  #pass next class
+        self.state.is_validate = ""
+        self.state.errors = "errors"
+        self.state.attempts = 0  #attempts for new class
+        # self.state.value_metric_pre = 0    #RQ3
+        # self.state.value_metric_post = 0    #RQ3
+
 
     @start()
     def init(self):
@@ -40,6 +55,8 @@ class OriginalFlow(Flow[ExampleFlow]):
         """
 
         global time_for_project
+        global attempts_tot
+        attempts_tot = 0     #if the execution is for both type project, i must reassignment attempt_tot between dataset projects
         self.state.project_list = [repository for repository in os.listdir(self.state.directory)]
         print(self.state.project_list)
         time_for_project = [0.0 for _ in self.state.project_list]
@@ -72,7 +89,7 @@ class OriginalFlow(Flow[ExampleFlow]):
             # resetto le classi per il nuovo progetto
             self.state.classes = []
             self.state.current_class = 0
-            return "percorso_progetto"
+            return "project_roadmap"
         else:
             print("All projects have been processed")
 
@@ -86,9 +103,25 @@ class OriginalFlow(Flow[ExampleFlow]):
         Performs a GET request to /api/measures/component_tree and sorts by security_rating.
         """
 
-        self.state.project_start_times[self.state.current_project] = time.time()   #faccio partire tempo per progetto
+        self.state.project_start_times[self.state.current_project] = time.time()   #start time for every projects
 
-        response = classes_for_project(self.state.project_list[self.state.current_project])
+        all_files = classes_for_project(self.state.project_list[self.state.current_project])
+
+        # filter ONLY JAVA classes (so NO xml classes or other extensions and NO test classes)
+        java_files = [file for file in all_files if file["path"].endswith(".java") and not (
+                        "test" in file["path"].lower() or
+                        file["path"].endswith("Test.java") or
+                        file["path"].endswith("Tests.java")
+                    )]
+        random.seed(time.time())  # for randomize every execution
+        random_classes = []
+
+
+        if len(java_files) >= 10:
+            random_classes = random.sample(java_files, k=CLASSES_TO_REFACTOR)    #K = Number of classes to be refactored
+
+        #print(f"RANDOM CLASSESSSS: {random_classes}")
+
 
         #DA SCOMMENTARE PER RQ3
         '''all_components = response.json().get("components", [])
@@ -98,7 +131,7 @@ class OriginalFlow(Flow[ExampleFlow]):
         #quindi per quelle due che senso ha fare refactoring ?
         print(f"FILTERED {filtered}")
         self.state.classes = filtered'''
-        self.state.classes = response     #load the classes from JSON
+        self.state.classes = random_classes     #load the classes from JSON
 
 
 
@@ -137,8 +170,8 @@ class OriginalFlow(Flow[ExampleFlow]):
     def refactor_code(self):
         global attempts_tot
 
-        print(f"\nElaborando progetto: {self.state.project_list[self.state.current_project]}")
-        print(f"\nClasse: {self.state.classes[self.state.current_class]}")
+        print(f"\nElaborating project: {self.state.project_list[self.state.current_project]}")
+        print(f"\nClass: {self.state.classes[self.state.current_class]}")
 
         if self.state.attempts < ATTEMPTS_MAX:
 
@@ -149,17 +182,25 @@ class OriginalFlow(Flow[ExampleFlow]):
                 inputs={"code_class": self.state.code_class, "path_class": self.state.path_class,
                         "errors": self.state.errors})
 
-
             self.state.is_validate = result["valid"]
-            self.state.errors = result["errors"].strip() or "errors"
+            self.state.errors = (getattr(result, "errors", "") or "").strip() or "errors"
+
             #if errors is an empty string "", then I set self.state.errors simply to "errors"
             #so that templating in task2 works in both cases.
+            #While if the agent consider a empty errors with null, then self.state.errors is set to ""
 
             #self.state.value_metric_post = result["metric"]   #DA SCOMMENTARE PER LA RQ3
 
             print(f"VALIDATE: {self.state.is_validate}")
-            #print(f"ETRIC VALUE: {self.state.value_metric_pre}")   #DA SCOMMENTARE PER LA RQ3
+            #print(f"METRIC VALUE: {self.state.value_metric_pre}")   #DA SCOMMENTARE PER LA RQ3
 
+            '''if self.state.value_metric_pre == 0:     #the project hasn't another improvement to do
+                self.state.current_project += 1  # pass next project
+                self.state.is_validate = ""
+                self.state.errors = ""
+                self.state.attempts = 0  # attempts for new class
+                # self.state.value_metric_pre = 0    #RQ3
+                # self.state.value_metric_post = 0    #RQ3'''
 
             if self.state.is_validate:  #vuol dire Build Success
                 '''if self.state.value_metric_post <= self.state.value_metric_pre:   #c'è stato un miglioramento
@@ -168,12 +209,8 @@ class OriginalFlow(Flow[ExampleFlow]):
                     self.state.attempts += 1  #aumenta numero di tentativi e riesegui il refactoring su stessa classe
                     attempts_tot += 1
                 else:'''   #DA SCOMMENTARE PER LA RQ3
-                self.state.current_class += 1   #passa alla prossima classe
-                self.state.is_validate = ""
-                self.state.errors = ""
-                self.state.attempts = 0  # riazzero attempts per la prossima classe
-                # self.state.value_metric_pre = 0
-                # self.state.value_metric_post = 0
+                self.preparing_new_class()
+
 
             else:  #Build Failure (errori di compilazione o altro tipo di errore)
                 self.state.attempts += 1   #aumenta numero di attempts e riesegui il refactoring su stessa classe
@@ -182,12 +219,7 @@ class OriginalFlow(Flow[ExampleFlow]):
 
         else:    #arrivato a N attempts
             print("\nClass already iterated 3 times, move on to the next class or next project")
-            self.state.current_class +=1   #passa avanti con la classe
-            self.state.is_validate= ""
-            self.state.errors= ""
-            self.state.attempts = 0   #riazzero attempts per la prossima classe
-            #self.state.value_metric_pre = 0      #DA SCOMMENTARE PER LA RQ3
-            #self.state.value_metric_post = 0     #DA SCOMMENTARE PER LA RQ3
+            self.preparing_new_class()
 
 
 
@@ -204,40 +236,52 @@ def plot():
 if __name__ == "__main__":
 
     validator = Validation()
+    total_time_lpo: Optional[float] = 0.0
+    total_time_apache: Optional[float] = 0.0
+    total_attempts_lpo: int = 0
+    total_attempts_apache: int = 0
 
-    scelta = input("Which dataset do you want to process? [lpo/apache/both]: ").strip().lower()
+    choice = input("Which dataset do you want to process? [lpo/apache/both]: ").strip().lower()
 
-    start_time = time.time()
+    #start_time = time.time()
 
-    if scelta in ["lpo", "both"]:
+    if choice in ["lpo", "both"]:
         print("\n--- Starting procedure for LPO ---\n")
         #comment out the next 3 lines after the first execution
 
-        validator.clone_lpo_projects()
+        #validator.clone_lpo_projects()
         validator.creation_sonar_projects(f"{DIRECTORY_REPOS}{LPO_PATH}")
-        validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
+        #validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
 
+        start_time = time.time()
         kickoff(f"{DIRECTORY_REPOS}{LPO_PATH}")
+
+        total_attempts_lpo = attempts_tot
 
         print(f"Execution Times for Students projects: {time_for_project}")
         print("Attributes pre-refactoring (LPO):")
         print(pd.read_csv("attributes_before_refactoring").to_string())
 
-        validator.results_post_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
+        if choice in ["lpo"]:    #like this, if the choice is both, the system do result post refactoring code only after finish apache project also
+            validator.results_post_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
 
         print("Attributes post-refactoring (LPO):")
         print(pd.read_csv("attributes_post_refactoring").to_string())
+        total_time_lpo = time.time() - start_time
 
 
-    if scelta in ["apache", "both"]:
+    if choice in ["apache", "both"]:
         print("\n--- Starting procedure for Apache ---\n")
         #comment out the next 3 lines after the first execution
 
-        #validator.clone_apache_projects()
+        validator.clone_apache_projects()
         validator.creation_sonar_projects(f"{DIRECTORY_REPOS}{APACHE_PATH}")
-        #validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{APACHE_PATH}")
 
+        start_time = time.time()
         kickoff(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+
+        total_attempts_apache = attempts_tot
 
         print(f"Execution Times for Apache projects: {time_for_project}")
         print("Attributes pre-refactoring (Apache):")
@@ -247,11 +291,14 @@ if __name__ == "__main__":
 
         print("Attributes post-refactoring (Apache):")
         print(pd.read_csv("attributes_post_refactoring").to_string())
+        total_time_apache = time.time() - start_time
 
 
-    print(f"\nTOTAL ATTEMPTS= {attempts_tot}")
-    total_time = time.time() - start_time
-    print(f"TOTAL Execution Time= {total_time:.2f} secondi")
+    print(f"\nTOTAL ATTEMPTS= {total_attempts_lpo + total_attempts_apache}")
+    print(f"Total Attempts for Students Projects: {total_attempts_lpo}")
+    print(f"Total Attempts for Apache Projects: {total_attempts_apache}")
+    print(f"TOTAL Execution Time= {total_time_lpo:.2f} seconds")
+    print(f"TOTAL Execution Time= {total_time_apache:.2f} seconds")
 
     plot()
 

@@ -1,5 +1,5 @@
 # core frameworks
-crewai~=0.119.0
+crewai~=0.130.0
 crewai-tools==0.38.1
 fastapi
 langchain
@@ -12,4 +12,4 @@ pyyaml~=6.0.1
 pandas~=2.2.2
 requests~=2.32.3
 gitpython~=3.1.43
-litellm~=1.68.0
+litellm~=1.72.0

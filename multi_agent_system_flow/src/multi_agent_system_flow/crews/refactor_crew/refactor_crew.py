@@ -39,9 +39,16 @@ def sonar_scanner(path_class: str):
             break
 
     try:
-        subprocess.run(["mvn.cmd", "clean", "install", "verify"], cwd=os.path.join(directory_pom), check=True)
+        compilation = subprocess.run(["mvn.cmd", "clean", "install", "verify", "-Dmaven.test.failure.ignore=true"],
+                 cwd=os.path.join(directory_pom),
+                 check=True,
+                 capture_output=True,
+                 text=True
+                 )
 
-        comando = [
+        print("OUTPUT SONAR SCANNER:\n", compilation.stdout)
+
+        sonar_comand = [
             "mvn.cmd", "org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar" ,
             f"-Dsonar.projectKey=Project_{project_key}",
             f"-Dsonar.projectName=Project_{project_key}",
@@ -51,18 +58,18 @@ def sonar_scanner(path_class: str):
 
         jacoco_path = os.path.join(directory_pom, "target/site/jacoco/jacoco.xml")
         if os.path.exists(jacoco_path):  # PER I PROGETTI APACHE
-            comando.append(f"-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml")
+            sonar_comand.append(f"-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml")
         else:
             print("No JaCoCo report found: coverage will not be included in SonarQube")
 
 
-        result = subprocess.run(comando,
+        result = subprocess.run(sonar_comand,
             cwd=os.path.join(directory_pom),
             capture_output=True,
             text=True,
             check=True
         )
-        print("OUTPUT MAVEN:\n", result.stdout)
+        print("OUTPUT SONAR SCANNER:\n", result.stdout)
 
 #------------------------------------RESEARCH QUESTION 3-------------------------------------------------#
 
@@ -76,11 +83,11 @@ def sonar_scanner(path_class: str):
 
             response.raise_for_status()
             print(response.json().get("component").get("measures")[0].get("value"))
-            valore_metrica=int(response.json().get("component").get("measures")[0].get("value"))
+            metric_value=int(response.json().get("component").get("measures")[0].get("value"))
 
 #----------------------------------------------------------------------------------------------------------#
 
-            return RefactoringVerificator(valid=True, errors="", metric=valore_metrica)
+            return RefactoringVerificator(valid=True, errors="", metric=metric_value)
 
         except requests.exceptions.HTTPError as e:
             error_response = e.response.json()
@@ -97,6 +104,7 @@ def sonar_scanner(path_class: str):
         except requests.exceptions.RequestException as e:
             print(f"Network error or other issue in the request: {e}")
             return
+
 
     except subprocess.CalledProcessError as e:
         error_lines = [line for line in e.stdout.splitlines() if "[ERROR]" in line]
@@ -137,8 +145,8 @@ class RefactorCrew:
     """RefactorCrew crew"""
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)   #richiesto da CrewAI
-        #attributo per salvare il risultato di task4
+        super().__init__(**kwargs)   #request by CrewAI
+        #attribute for save task4 result
         self.refactoring_output: Optional[RefactoringVerificator] = None
 
     def _save_task4_result(self, output: TaskOutput) -> None:
@@ -153,7 +161,7 @@ class RefactorCrew:
             print("Refactoring_output:", self.refactoring_output)
 
 
-    def build_result(self, output: TaskOutput) -> bool:
+    def build_result(self, output: TaskOutput) -> bool:      #output: TaskOutput is necessary by CrewAI, even if not used
         """
         Returns False if I want to SKIP the conditional task,
         that is, when task4.valid == True.
@@ -171,42 +179,45 @@ class RefactorCrew:
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
-    '''llm = LLM(
+
+
+    llm= LLM(
         model="mistral/mistral-medium",
         api_key=os.getenv("MISTRAL_API_KEY"),
         stream=True,
-        temperature=0.4,
-        top_p=0.6,
-        frequency_penalty=0.1,
-        presence_penalty=0.1,
-        seed=42,
-        #stop=["###FINE"]
+        temperature=0.3,
+        top_p = 1.0  ,
+        frequency_penalty = 0.2,
+        presence_penalty = 0.1,
+        n = 1
+    )
+
+    llm_refactoring = LLM(
+        model="openai/gpt-4o-mini",
+        #base_url="https://api.anthropic.com/v1",
+        api_key=os.environ.get("OPENAI_API_KEY"),
+        stream=True,
+        temperature=0.05,
+        top_p=0.9,
+        frequency_penalty=0.3,
+        presence_penalty=0.0,
+        n=1,
+       #reasoning_effort="high"
+    )
+
+    '''llm_refactoring= LLM(
+        model="mistral/codestral-2501",
+        api_key=os.environ.get("MISTRAL_API_KEY"),
+        stream=True,
+        temperature=0.1,
+        top_p=0.9,
+        frequency_penalty=0.3,
+        presence_penalty=0.0,
+        n=1,
+        # reasoning_effort="high"
     )'''
 
-    llm= LLM(
-        model="mistral/codestral-2501",
-        api_key=os.getenv("MISTRAL_API_KEY"),
-        stream=True,
-        temperature=0.2,
-        top_p=1.0,
-        frequency_penalty=0.2,
-        presence_penalty=0.0,
-        n=1,
-        reasoning_effort="high"
-        #stop=["###FINE"]
-     )
 
-    llm_refactoring = LLM (
-        model="mistral/codestral-2501",
-        api_key=os.getenv("MISTRAL_API_KEY"),
-        stream=True,
-        temperature=0.2,
-        top_p=1.0,
-        frequency_penalty=0.2,
-        presence_penalty=0.0,
-        n=1,
-        reasoning_effort="high"
-    )
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
     # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
@@ -226,7 +237,7 @@ class RefactorCrew:
         return Agent(
             config=self.agents_config['code_refactor'],  # type: ignore[index]
             verbose=True,
-            llm=self.llm_refactoring
+            llm=self.llm
         )
 
     @agent
@@ -246,9 +257,9 @@ class RefactorCrew:
         )
 
     @agent
-    def error_summarizer(self) -> Agent:
+    def errors_summarizer(self) -> Agent:
         return Agent(
-            config=self.agents_config['error_summarizer'],  # type: ignore[index]
+            config=self.agents_config['errors_summarizer'],  # type: ignore[index]
             verbose=False,
             llm=self.llm
         )

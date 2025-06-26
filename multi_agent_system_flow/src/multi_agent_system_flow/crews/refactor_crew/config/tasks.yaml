@@ -4,43 +4,36 @@ task1:
         You are MasterPrompt, a Security-Focused Static Code Analysis Expert. 
         Analyze the following Java source code:
         {code_class}
-      
         Then create a precise and comprehensive prompt that 
         instructs an AI system or automated tool to evaluate source code, focusing on backstory of agent and, if possible, on:
-
         1. **Leverage SonarQube Quality Attributes**  
            - Examine Reliability, Security, Maintainability, Duplications and prioritize them metrics as 
              Vulnerabilities, Bugs and Code Smells.  
            - Bad Practices (e.g., duplicated code, improper naming, code smells)
            - Correctness (compliance with style and logic rules)
            - Critical And Blocker Issues 
-      
         2. **Integrate Java Static-Analysis Plugins**  
            - Instruct how to run Checkstyle rules for naming conventions and style consistency.  
            - Include PMD scans for bug patterns (unused variables, inefficient loops, null‐dereferences).  
            - Include FindBugs (SpotBugs) checks for bytecode-level security defects (e.g., null‐pointer dereference, SQL injection annotations).
-    
         4. **Suggest Concrete Remediation Steps**  
            - Propose secure coding best practices (input validation, prepared statements, safe deserialization).  
-    
         5. **Format and Output**  
            - The final output must be a single, clear prompt (in English) that can be provided verbatim to another AI model.  
            - Do not include code modifications yourself—only craft the instructions.  
-           - Append “###FINE” exactly at the end of the prompt to indicate the conclusion.
 
     expected_output: |
       A single, self-contained English prompt that:
       - Clearly tells an AI agent how to run SonarQube and Java plugin scans (Checkstyle, PMD, FindBugs).  
       - Guides the AI to identify bad practices, code smells, style/logic inconsistencies, and critical security flaws (OWASP Top 10).  
       - Instructs the AI on remediation actions (secure APIs, input sanitization, configuration fixes, writing tests).  
-      - Concludes with “###FINE” on its own line to stop further processing.
 
     agent: query_writer
 
 
 
 task2:
-    #ho notato che dando all'LLM comandi itemizzati, lui risponde meglio
+
     description: |
         You are MasterJava, a Java Code Refactoring Expert. 
         Refactor the {code_class}, using ONLY the prompt produced in task1 as guidance and absolutely according to these rules:
@@ -53,11 +46,12 @@ task2:
              - Do not alter inheritance hierarchies, implemented interfaces, abstract class extensions, or annotations that affect class loading/behavior.
         
           2. **Changes:**  
-             - Be aggressive on code refactoring, following the prompt of task1
-             - I want that you resolve the most problems of the code
-             - Only refactor code that directly addresses issues highlighted in task1.  
+             - Be AGGRESSIVE on code refactoring, following the prompt in task1 as refactoring rules
+             - I want that you resolve the most problems of the code following context from task1
+             - Only refactor code that directly addresses issues highlighted in the context from task1.  
              - Do not introduce any new compilation or runtime {errors}.  
              - Do not add test cases.
+             - Add comments or a header at the top of the file when appropriate, if necessary.
 
     expected_output: >
          Return only the full raw content of the .java file WITHOUT include ```java or ``` in the begin of Java file or other markdown.
@@ -112,7 +106,7 @@ conditional_task5:
 conditional_task6:
     description: >
         You have received as input a list of SonarScanner errors from task4.
-        Objective: provide a clear and concise summary of the main issues detected by Sonar.
+        Objective: provide a clear and concise textual summary of the main issues detected by Maven or Sonar.
 
     expected_output: |
         Return a JSON containing:
@@ -126,6 +120,6 @@ conditional_task6:
     context:
        - task4
 
-    agent: error_summarizer
+    agent: errors_summarizer
 
 

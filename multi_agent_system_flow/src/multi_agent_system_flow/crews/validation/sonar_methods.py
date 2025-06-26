@@ -1,5 +1,6 @@
 import json
 import random
+import time
 
 import requests
 
@@ -59,7 +60,8 @@ def returns_metrics_pre_kickoff(project):
     url = "http://localhost:9000/api/measures/component"
     param = {
         "component": f"Project_{project}",
-        "metricKeys": "ncloc,bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
+        "metricKeys": "ncloc,bugs,vulnerabilities,code_smells,coverage, test_success_density, test_failures,"
+                      "duplicated_lines_density,"
                       "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
                       "blocker_violations,critical_violations"
     }
@@ -95,22 +97,27 @@ def returns_metrics_pre_kickoff(project):
         response = requests.get(url, headers=HEADER, params=param)
 
         response.raise_for_status()
+        print(response.json())
 
-        #If the project is on SonarQube, but the scanner had issues,
-        #then the project remains on Sonar without static code analysis.
-        #This means it is a useless project that should be removed from Sonar (and locally).
-        if not (response.json().get("component").get("measures")):
+        measures = response.json().get("component").get("measures")
+
+        # If the project is on SonarQube, but the scanner had issues,
+        # then the project remains on Sonar without static code analysis.
+        # This means it is a useless project that should be removed from Sonar (and locally).
+        if not measures:
             print("Delete the project from SonarQube and locally because it did not pass SonarScanner")
             delete_project(project)
             delete_locally(project)
-
-        elif int(response.json().get("component").get("measures")[8].get("value")) < 800:
-            print("Delete the project from SonarQube and locally because it has fewer than 800 lines of code")
-            delete_project(project)
-            delete_locally(project)
-
         else:
-            create_report(response.json(), project, FILE_REPORT_PRE_REFACTORING)
+            metrics_dict = {item["metric"]: float(item["value"]) for item in measures if "value" in item}
+            ncloc = metrics_dict.get("ncloc", 0.0)  # lines of code
+
+            if ncloc < 800:
+                print("Delete the project from SonarQube and locally because it has fewer than 800 lines of code")
+                delete_project(project)
+                delete_locally(project)
+            else:
+                create_report(response.json(), project, FILE_REPORT_PRE_REFACTORING)
 
 
     except requests.exceptions.HTTPError as e:
@@ -135,7 +142,8 @@ def returns_metrics_post_kickoff(project):
     url = "http://localhost:9000/api/measures/component"
     param = {
         "component": f"Project_{project}",
-        "metricKeys": "ncloc,bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
+        "metricKeys": "ncloc,bugs,vulnerabilities,code_smells,coverage,test_success_density, test_failures,"
+                      "duplicated_lines_density,"
                       "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
                       "blocker_violations,critical_violations"
     }
@@ -157,7 +165,7 @@ def returns_metrics_post_kickoff(project):
 
 def classes_for_project(project):
 
-    #FOR THE RQ2 I TAKE RANDOMLY 4 CLASSES
+    #FOR THE RQ2 I TAKE RANDOMLY 10 CLASSES
     url = "http://localhost:9000/api/components/tree"
     try:
         params = {
@@ -169,14 +177,8 @@ def classes_for_project(project):
         comps = response.json()
         response.raise_for_status()
         all_files = comps["components"]
+        return all_files
 
-        #filter ONLY JAVA classes (so NO xml classes or other extensions)
-        java_files = [file for file in all_files if file["path"].endswith(".java")]
-
-        if len(java_files) >= 6:
-            random_classes = random.sample(java_files, k=6)
-        #random_classes = random.sample(comps["components"], k=6)
-            return random_classes
 
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error ({e.response.status_code}) during the research: {e}")
@@ -190,10 +192,7 @@ def classes_for_project(project):
     '''url = "http://localhost:9000/api/measures/component_tree"
     param = {
         "component": f"Project_{project}",
-        "metricKeys":  # "bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density,"
-        # "reliability_rating,sqale_rating,security_rating,cognitive_complexity,"
-        # "blocker_violations,critical_violations",
-            "vulnerabilities",
+        "metricKeys":  "vulnerabilities",
         "qualifiers": "FIL",
         "s": "metric",
         "metricSort": "vulnerabilities",
