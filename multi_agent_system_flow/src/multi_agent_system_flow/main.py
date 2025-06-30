@@ -12,12 +12,11 @@ from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costan
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.validation import DIRECTORY_REPOS, Validation
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.refactor_crew.refactor_crew import RefactorCrew
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_methods import classes_for_project, \
-    esec_class
+    esec_class, metrics
 
 ATTEMPTS_MAX: int = 3
 attempts_tot: int = 0
 time_for_project: List[float] = []
-CLASSES_TO_REFACTOR = 5
 
 class ExampleFlow(BaseModel):
     directory: str = ""      #directory where execution takes place
@@ -30,8 +29,8 @@ class ExampleFlow(BaseModel):
     errors: Optional[str] = ""       #errors (compilation or others) to pass to the Crew to guide the agent to avoid committing them
     is_validate: Optional[bool] = True       #flag that checks if the terminal command for a class returned Build Success or Build Failure
     attempts: Optional[int] = 0       #counter to keep track of the number of attempts on a single class
-    #value_metric_pre: Optional[int] = 0   #FOR RQ3
-    #value_metric_post: Optional[int] = 0   #FOR RQ3
+    value_metric_pre: Optional[int] = 0   #FOR RQ3
+    value_metric_post: Optional[int] = 0   #FOR RQ3
     project_start_times: List[float] = []    #list of start execution time for every project
 
 
@@ -44,8 +43,7 @@ class OriginalFlow(Flow[ExampleFlow]):
         self.state.is_validate = ""
         self.state.errors = "errors"
         self.state.attempts = 0  #attempts for new class
-        # self.state.value_metric_pre = 0    #RQ3
-        # self.state.value_metric_post = 0    #RQ3
+        #self.state.value_metric_post = 0    #RQ3
 
 
     @start()
@@ -107,8 +105,9 @@ class OriginalFlow(Flow[ExampleFlow]):
 
         all_files = classes_for_project(self.state.project_list[self.state.current_project])
 
-        # filter ONLY JAVA classes (so NO xml classes or other extensions and NO test classes)
-        java_files = [file for file in all_files if file["path"].endswith(".java") and not (
+# --------------------------------------------------RQ1/RQ2-----------------------------------------------------------------------#
+        # filter ONLY JAVA classes (so NO xml classes or other extensions and NO test classes), ONLY for RQ1 and RQ2
+        '''java_files = [file for file in all_files if file["path"].endswith(".java") and not (
                         "test" in file["path"].lower() or
                         file["path"].endswith("Test.java") or
                         file["path"].endswith("Tests.java")
@@ -121,17 +120,25 @@ class OriginalFlow(Flow[ExampleFlow]):
             random_classes = random.sample(java_files, k=CLASSES_TO_REFACTOR)    #K = Number of classes to be refactored
 
         #print(f"RANDOM CLASSESSSS: {random_classes}")
+        self.state.classes = random_classes     #load the classes from JSON, for RQ1 and RQ2'''
+# -----------------------------------------------------------------------------------------------------------------------------#
 
 
-        #DA SCOMMENTARE PER RQ3
-        '''all_components = response.json().get("components", [])
-        filtered = [c for c in all_components if c.get("measures")]   #ho solo le classi che hanno effettivamente una measure
-        #questo perchè può essere che un progetto abbia 1 solo vulnerabilities e il json mi restituisce le prime 3 classi
-        #ma cosi mi restituisce la classe dove è presente effettivamente il vulnerabilities e altre 2 classi che non hanno problemi
-        #quindi per quelle due che senso ha fare refactoring ?
+#--------------------------------------------------RQ3-----------------------------------------------------------------------#
+        print(all_files)
+        self.state.value_metric_pre = int(metrics(self.state.project_list[self.state.current_project]))
+        # metrics is a sonar_method, there you can specify the metric (vulnerabilities, bugs, code smells, ecc..)
+
+        all_components = all_files.json().get("components", [])
+        filtered = [c for c in all_components if c.get("measures")]   # I only have the classes that actually have a measure
+        #this is because a project might have only one vulnerability, and the JSON returns the top 3 classes
+        #but this way, it gives me the class where the vulnerability actually exists, and two other classes that don't have any issues
+        #so what's the point of refactoring those two?
+
         print(f"FILTERED {filtered}")
-        self.state.classes = filtered'''
-        self.state.classes = random_classes     #load the classes from JSON
+        self.state.classes = filtered
+
+ # ----------------------------------------------------------------------------------------------------------------------------#
 
 
 
@@ -146,12 +153,11 @@ class OriginalFlow(Flow[ExampleFlow]):
 
             #http://localhost:9000/api/sources/raw requires the project key as a query string parameter  ==> I retrieve it from the JSON
             actual_class = self.state.classes[self.state.current_class]
-            print(f"Actual Class= {actual_class}")
+            #print(f"Actual Class= {actual_class}")
             code = esec_class(actual_class)
 
             self.state.code_class = code.text
 
-            #self.state.value_metric_pre = int(metrics(classe_attuale.get("key")))  #DA SCOMMENTARE PER LA RQ3
 
             project_root = f"{self.state.directory}{self.state.project_list[self.state.current_project]}"
 
@@ -189,35 +195,56 @@ class OriginalFlow(Flow[ExampleFlow]):
             #so that templating in task2 works in both cases.
             #While if the agent consider a empty errors with null, then self.state.errors is set to ""
 
-            #self.state.value_metric_post = result["metric"]   #DA SCOMMENTARE PER LA RQ3
+
 
             print(f"VALIDATE: {self.state.is_validate}")
-            #print(f"METRIC VALUE: {self.state.value_metric_pre}")   #DA SCOMMENTARE PER LA RQ3
 
-            '''if self.state.value_metric_pre == 0:     #the project hasn't another improvement to do
-                self.state.current_project += 1  # pass next project
-                self.state.is_validate = ""
-                self.state.errors = ""
-                self.state.attempts = 0  # attempts for new class
-                # self.state.value_metric_pre = 0    #RQ3
-                # self.state.value_metric_post = 0    #RQ3'''
+#-------------------------------------------------RQ3------------------------------------------------------------------#
 
-            if self.state.is_validate:  #vuol dire Build Success
-                '''if self.state.value_metric_post <= self.state.value_metric_pre:   #c'è stato un miglioramento
-                    print(f"VULNERABILITIES PRIMA: {self.state.value_metric_pre}")
-                    print(f"VULNERABILITIES DOPO: {self.state.value_metric_post}")
-                    self.state.attempts += 1  #aumenta numero di tentativi e riesegui il refactoring su stessa classe
-                    attempts_tot += 1
-                else:'''   #DA SCOMMENTARE PER LA RQ3
-                self.preparing_new_class()
+            self.state.value_metric_post = result["metric"]
+            print(f"METRIC VALUE PRE: {self.state.value_metric_pre}")
+            print(f"METRIC VALUE POST: {self.state.value_metric_post}")
 
 
-            else:  #Build Failure (errori di compilazione o altro tipo di errore)
-                self.state.attempts += 1   #aumenta numero di attempts e riesegui il refactoring su stessa classe
+            if self.state.is_validate:  #Build Success
+                if self.state.value_metric_post == 0:  # the approach hasn't another improvement to do because the metrics for specific project is 0
+                    self.state.current_project += 1  # pass next project
+                    self.state.is_validate = ""
+                    self.state.errors = ""
+                    self.state.attempts = 0  # attempts for new class
+                    self.state.value_metric_pre = 0
+                    self.state.value_metric_post = 0
+
+                else:
+                    if self.state.value_metric_post >= self.state.value_metric_pre:   #there's not improvement
+                        self.state.attempts += 1  #increase number of attempts and refactoring another time this clss
+                        attempts_tot += 1
+                    else:
+                        self.state.value_metric_pre = self.state.value_metric_post  # update old metric value with the new
+                        self.preparing_new_class()
+
+            else:  #Build Failure (compilation error or others errors)
+                self.state.attempts += 1   #increase number of attempts and refactoring another time this clss
                 attempts_tot += 1
                 print(F"Total Attempts for now: {attempts_tot}")
 
-        else:    #arrivato a N attempts
+# ----------------------------------------------------------------------------------------------------------------------#
+
+
+# -------------------------------------------------RQ1/RQ2------------------------------------------------------------------#
+
+            '''if self.state.is_validate:  #Build Success
+                self.preparing_new_class()
+
+
+            else:  #Build Failure (compilation errors or other errors)
+                self.state.attempts += 1   #increase number of attempts and refactoring another time this clss
+                attempts_tot += 1
+                print(F"Total Attempts for now: {attempts_tot}")'''
+
+# ---------------------------------------------------------------------------------------------------------------------------#
+
+        else:    #N attempts
             print("\nClass already iterated 3 times, move on to the next class or next project")
             self.preparing_new_class()
 
@@ -251,9 +278,9 @@ if __name__ == "__main__":
 
         #validator.clone_lpo_projects()
         validator.creation_sonar_projects(f"{DIRECTORY_REPOS}{LPO_PATH}")
-        #validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
+        validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
 
-        start_time = time.time()
+        '''start_time = time.time()
         kickoff(f"{DIRECTORY_REPOS}{LPO_PATH}")
 
         total_attempts_lpo = attempts_tot
@@ -262,24 +289,24 @@ if __name__ == "__main__":
         print("Attributes pre-refactoring (LPO):")
         print(pd.read_csv("attributes_before_refactoring").to_string())
 
-        if choice in ["lpo"]:    #like this, if the choice is both, the system do result post refactoring code only after finish apache project also
-            validator.results_post_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
+        validator.results_post_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
 
         print("Attributes post-refactoring (LPO):")
         print(pd.read_csv("attributes_post_refactoring").to_string())
-        total_time_lpo = time.time() - start_time
+        total_time_lpo = time.time() - start_time'''
+
 
 
     if choice in ["apache", "both"]:
         print("\n--- Starting procedure for Apache ---\n")
         #comment out the next 3 lines after the first execution
 
-        validator.clone_apache_projects()
+        #validator.clone_apache_projects()
         validator.creation_sonar_projects(f"{DIRECTORY_REPOS}{APACHE_PATH}")
-        validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        #validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{APACHE_PATH}")
 
         start_time = time.time()
-        kickoff(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        '''kickoff(f"{DIRECTORY_REPOS}{APACHE_PATH}")
 
         total_attempts_apache = attempts_tot
 
@@ -291,7 +318,9 @@ if __name__ == "__main__":
 
         print("Attributes post-refactoring (Apache):")
         print(pd.read_csv("attributes_post_refactoring").to_string())
-        total_time_apache = time.time() - start_time
+        total_time_apache = time.time() - start_time'''
+
+
 
 
     print(f"\nTOTAL ATTEMPTS= {total_attempts_lpo + total_attempts_apache}")

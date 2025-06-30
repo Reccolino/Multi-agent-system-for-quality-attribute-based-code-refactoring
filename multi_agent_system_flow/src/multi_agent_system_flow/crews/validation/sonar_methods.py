@@ -5,9 +5,10 @@ import time
 import requests
 
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import HEADER, \
-    FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING
+    FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING, METRIC_TO_REFACTOR
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import scanner_da_terminale, \
     search_pom, delete_locally, create_report
+
 
 
 def create_project(project):
@@ -165,8 +166,8 @@ def returns_metrics_post_kickoff(project):
 
 def classes_for_project(project):
 
-    #FOR THE RQ2 I TAKE RANDOMLY 10 CLASSES
-    url = "http://localhost:9000/api/components/tree"
+#-----------------------------------------RQ1/RQ2----------------------------------------------------------#
+    '''url = "http://localhost:9000/api/components/tree"
     try:
         params = {
             "component": f"Project_{project}",
@@ -184,28 +185,39 @@ def classes_for_project(project):
         print(f"HTTP Error ({e.response.status_code}) during the research: {e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Network error or other issue in the request: {e}")
+        print(f"Network error or other issue in the request: {e}")'''
+
+#-------------------------------------------------------------------------------------------------------------#
 
 
-#-------------------------------RESEARCH QUESTION 3--------------------------------------------------#
 
-    '''url = "http://localhost:9000/api/measures/component_tree"
+#-----------------------------------------RESEARCH QUESTION 3--------------------------------------------------#
+
+    url = "http://localhost:9000/api/measures/component_tree"
     param = {
         "component": f"Project_{project}",
-        "metricKeys":  "vulnerabilities",
+        "metricKeys":  f"{METRIC_TO_REFACTOR}",
         "qualifiers": "FIL",
         "s": "metric",
-        "metricSort": "vulnerabilities",
-        "ps": 4,
+        "metricSort": f"{METRIC_TO_REFACTOR}",
+        "ps": 5,                    #here you cn modify the number of classes by sonarqube
         "asc": "false"
     }
+
     try:
         response = requests.get(url, headers=HEADER, params=param)
 
         response.raise_for_status()
         print(json.dumps(response.json(), indent=4))
         #print(response)
-        return response'''
+        return response
+
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error ({e.response.status_code}) during the research: {e}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Network error or other issue in the request: {e}")
+
 
 #---------------------------------------------------------------------------------------------------#
 
@@ -236,12 +248,11 @@ def esec_class(classe):
 
 
 
-def metrics(classe):
+def metrics(project):
     url = "http://localhost:9000/api/measures/component"
     param = {
-        "component": f"{classe}",
-
-        "metricKeys": "vulnerabilities"
+        "component": f"Project_{project}",
+        "metricKeys": f"{METRIC_TO_REFACTOR}"
     }
 
 

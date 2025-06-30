@@ -8,7 +8,8 @@ from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costan
     APACHE_PATH, LPO_PATH
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_methods import create_project, \
      returns_metrics_pre_kickoff, returns_metrics_post_kickoff
-from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import final_report_excel
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import final_report_excel, \
+    search_pom, scanner_da_terminale
 
 
 class BaseValidation(ABC):
@@ -135,5 +136,7 @@ class Validation(BaseValidation):
             time.sleep(3)
 
         final_report_excel()
+
+
 
 

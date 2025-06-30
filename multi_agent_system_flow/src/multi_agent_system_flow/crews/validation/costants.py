@@ -7,6 +7,10 @@ APACHE_PATH = "/apache/"
 FILE_REPORT_PRE_REFACTORING = "attributes_before_refactoring"
 FILE_REPORT_POST_REFACTORING = "attributes_post_refactoring"
 
+#CLASSES_TO_REFACTOR = 10      #only for RQ1 and RQ2
+METRIC_TO_REFACTOR = "bugs"    #"bugs", "code smells",.....  only for RQ3
+
+
 #header that contain SonarQube token, used in all API calls
 HEADER: Final[dict[str, str]] = {
     "Authorization": f"Bearer {os.getenv("SONAR_LOCAL_API_TOKEN")}",

@@ -8,8 +8,8 @@ from typing import List, Optional
 from crewai.tasks.conditional_task import ConditionalTask
 from crewai.tools import tool
 from pydantic import BaseModel
-from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import DIRECTORY_REPOS, HEADER
-
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import DIRECTORY_REPOS, HEADER, \
+    METRIC_TO_REFACTOR
 
 
 # If you want to run a snippet of code before or after the crew starts,
@@ -46,6 +46,8 @@ def sonar_scanner(path_class: str):
                  text=True
                  )
 
+        subprocess.run(["mvn.cmd", "jacoco:report"], cwd=os.path.join(directory_pom), check=False)  #if the project hasn't jacoco, then this subproccess failures
+
         print("OUTPUT SONAR SCANNER:\n", compilation.stdout)
 
         sonar_comand = [
@@ -57,7 +59,7 @@ def sonar_scanner(path_class: str):
         ]
 
         jacoco_path = os.path.join(directory_pom, "target/site/jacoco/jacoco.xml")
-        if os.path.exists(jacoco_path):  # PER I PROGETTI APACHE
+        if os.path.exists(jacoco_path):
             sonar_comand.append(f"-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml")
         else:
             print("No JaCoCo report found: coverage will not be included in SonarQube")
@@ -71,12 +73,12 @@ def sonar_scanner(path_class: str):
         )
         print("OUTPUT SONAR SCANNER:\n", result.stdout)
 
-#------------------------------------RESEARCH QUESTION 3-------------------------------------------------#
+#------------------------------------ON PLUS FOR RESEARCH QUESTION 3-------------------------------------------------#
 
         url = "http://localhost:9000/api/measures/component"
         param = {
             "component": f"Project_{project_key}",
-            "metricKeys": "vulnerabilities"
+            "metricKeys": f"{METRIC_TO_REFACTOR}"
         }
         try:
             response = requests.get(url, headers=HEADER, params=param)
@@ -187,7 +189,7 @@ class RefactorCrew:
         stream=True,
         temperature=0.3,
         top_p = 1.0  ,
-        frequency_penalty = 0.2,
+        frequency_penalty = 0.1,
         presence_penalty = 0.1,
         n = 1
     )
