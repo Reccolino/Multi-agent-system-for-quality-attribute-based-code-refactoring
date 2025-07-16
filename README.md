@@ -1,3 +1,16 @@
+# 🎓 Bachelor's Thesis 
+
+📄 **Title**: _"Multi-agent system for code refactoring based on quality attributes"_  
+👨‍🎓 **Student**: Ercole Rutolo  
+🏫 **University**: Università Degli Studi Dell'Aquila 
+📅 **Academic Year**: 2024–2025  
+📘 **Download Thesis**: 👉 [View the full thesis in Italian (PDF)](Tesi_Triennale.pdf)
+
+This repository supports the Bachelor's thesis focused on the development of **RefactorCrew**, a multi-agent system using LLMs for automated code refactoring, built on top of the [crewAI](https://crewai.com) framework.
+
+---
+
+
 # RefactorCrew
 
 Welcome to the  RefactorCrew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.

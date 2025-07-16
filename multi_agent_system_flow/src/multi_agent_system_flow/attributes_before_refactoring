@@ -1,13 +1,1 @@
 Project,Lines of Code,Coverage,Test Success Density,Test Failures,Vulnerabilities,Security Rating,Bugs,Reliabilty Rating,Code Smells,Maintainability Rating,Cognitive Complexity,Duplicated Lines Density,Blocker Violations,Critical Violations
-
-gioco-oca-univaq-fsociety,1555,0.0,N/A,N/A,1,3.0,50,3.0,335,1.0,241,2.4,46,50
-gioco-oca-univaq-let,1093,0.0,100.0,0,6,4.0,32,5.0,222,2.0,175,6.4,40,66
-gioco-oca-univaq-rasputeam,915,0.0,N/A,N/A,6,4.0,11,4.0,193,2.0,174,6.1,29,59
-gioco-oca-univaq-the-debuggers,1416,0.0,N/A,N/A,10,4.0,16,5.0,297,2.0,431,3.1,52,85
-gioco-oca-univaq-untitled-goose-alliance,1255,0.0,100.0,0,11,4.0,34,4.0,292,2.0,215,2.9,45,74
-gioco-oca-univaq-vmd,1624,0.0,N/A,N/A,8,4.0,21,5.0,311,2.0,324,2.6,45,93
-monopoli-univaq-monopoliduoproject,4463,0.0,N/A,N/A,13,4.0,86,5.0,615,1.0,572,15.7,72,103
-monopoli-univaq-progettolpoantonacci,1635,0.0,100.0,0,4,3.0,18,4.0,257,1.0,76,0.0,42,20
-monopoli-univaq2-daltrio,2934,0.0,N/A,N/A,3,4.0,36,5.0,505,1.0,574,1.5,59,148
-monopoli-univaq2-polimono,1634,0.0,N/A,N/A,12,4.0,15,5.0,327,2.0,516,0.0,25,52
-risiko-univaq-masterminds,2779,0.0,100.0,0,11,4.0,39,5.0,233,1.0,511,1.1,32,106

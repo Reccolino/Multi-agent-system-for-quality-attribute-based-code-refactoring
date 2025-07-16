@@ -1,5 +1,7 @@
 import os
 import subprocess
+import time
+
 import requests
 from crewai import Agent, Crew, Process, Task, LLM, TaskOutput
 from crewai.project import CrewBase, agent, crew, task
@@ -72,6 +74,8 @@ def sonar_scanner(path_class: str):
             check=True
         )
         print("OUTPUT SONAR SCANNER:\n", result.stdout)
+
+        time.sleep(12)   #time for SonarQube to update the code
 
 #------------------------------------ON PLUS FOR RESEARCH QUESTION 3-------------------------------------------------#
 
@@ -186,6 +190,7 @@ class RefactorCrew:
     llm= LLM(
         model="mistral/mistral-medium",
         api_key=os.getenv("MISTRAL_API_KEY"),
+        #base_url = "https://api.mistral.ai",
         stream=True,
         temperature=0.3,
         top_p = 1.0  ,
@@ -239,7 +244,7 @@ class RefactorCrew:
         return Agent(
             config=self.agents_config['code_refactor'],  # type: ignore[index]
             verbose=True,
-            llm=self.llm
+            llm=self.llm_refactoring
         )
 
     @agent

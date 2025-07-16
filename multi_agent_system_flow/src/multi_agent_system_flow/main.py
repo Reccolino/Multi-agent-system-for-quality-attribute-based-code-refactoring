@@ -1,14 +1,12 @@
 import os
 import random
 import time
-import warnings
 from typing import List, Optional
 import pandas as pd
-import requests
-
 from pydantic import BaseModel
 from crewai.flow.flow import Flow, listen, start, or_, router
-from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import APACHE_PATH, LPO_PATH
+from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import APACHE_PATH, LPO_PATH, \
+    CLASSES_TO_REFACTOR
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.validation import DIRECTORY_REPOS, Validation
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.refactor_crew.refactor_crew import RefactorCrew
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.sonar_methods import classes_for_project, \
@@ -38,19 +36,9 @@ class ExampleFlow(BaseModel):
 
 class OriginalFlow(Flow[ExampleFlow]):
 
-    def preparing_new_class(self):
-        self.state.current_class += 1  #pass next class
-        self.state.is_validate = ""
-        self.state.errors = "errors"
-        self.state.attempts = 0  #attempts for new class
-        #self.state.value_metric_post = 0    #RQ3
-
-
     @start()
     def init(self):
-        """
-        Method that loads all projects into the project_list. From here, you can access individual projects and their classes.
-        """
+        """Method that loads all projects into the project_list. From here, you can access individual projects and their classes"""
 
         global time_for_project
         global attempts_tot
@@ -64,9 +52,7 @@ class OriginalFlow(Flow[ExampleFlow]):
 
     @router(or_("init", "classes_for_project", "refactor_code"))
     def router(self, _=None):
-        """
-        The router checks the current state and returns the name of the next method to execute.
-        """
+        """The router checks the current state and returns the name of the next method to execute"""
 
         #If I haven't loaded the classes for a project yet
         if not self.state.classes:
@@ -84,7 +70,7 @@ class OriginalFlow(Flow[ExampleFlow]):
             self.state.current_project]
         self.state.current_project += 1
         if self.state.current_project < len(self.state.project_list):
-            # resetto le classi per il nuovo progetto
+            #reset classes for new project
             self.state.classes = []
             self.state.current_class = 0
             return "project_roadmap"
@@ -96,14 +82,20 @@ class OriginalFlow(Flow[ExampleFlow]):
 
     @listen("project_roadmap")
     def classes_for_project(self):
-        """
-        Returns: the path of the class with the worst security_rating via SonarQube and its code.
-        Performs a GET request to /api/measures/component_tree and sorts by security_rating.
-        """
+        """Returns: the path of the class with the worst security_rating via SonarQube and its code.
+        Performs a GET request to /api/measures/component_tree and sorts by security_rating"""
 
         self.state.project_start_times[self.state.current_project] = time.time()   #start time for every projects
 
+        #in this sonar_method classes_for_project you can modify the return of classes, based on the RQ
         all_files = classes_for_project(self.state.project_list[self.state.current_project])
+
+        #while in this method you can filtered the classes for the previous call
+        self.classes_for_rqs(all_files)
+
+
+
+    def classes_for_rqs(self, all_files):
 
 # --------------------------------------------------RQ1/RQ2-----------------------------------------------------------------------#
         # filter ONLY JAVA classes (so NO xml classes or other extensions and NO test classes), ONLY for RQ1 and RQ2
@@ -123,31 +115,30 @@ class OriginalFlow(Flow[ExampleFlow]):
         self.state.classes = random_classes     #load the classes from JSON, for RQ1 and RQ2'''
 # -----------------------------------------------------------------------------------------------------------------------------#
 
-
-#--------------------------------------------------RQ3-----------------------------------------------------------------------#
+# --------------------------------------------------RQ3-----------------------------------------------------------------------#
         print(all_files)
         self.state.value_metric_pre = int(metrics(self.state.project_list[self.state.current_project]))
         # metrics is a sonar_method, there you can specify the metric (vulnerabilities, bugs, code smells, ecc..)
 
         all_components = all_files.json().get("components", [])
-        filtered = [c for c in all_components if c.get("measures")]   # I only have the classes that actually have a measure
-        #this is because a project might have only one vulnerability, and the JSON returns the top 3 classes
-        #but this way, it gives me the class where the vulnerability actually exists, and two other classes that don't have any issues
-        #so what's the point of refactoring those two?
+        filtered = [c for c in all_components if
+                    c.get("measures")]  # I only have the classes that actually have a measure
+        # this is because a project might have only one vulnerability, and the JSON returns the top 3 classes
+        # but this way, it gives me the class where the vulnerability actually exists, and two other classes that don't have any issues
+        # so what's the point of refactoring those two?
 
         print(f"FILTERED {filtered}")
-        self.state.classes = filtered
 
- # ----------------------------------------------------------------------------------------------------------------------------#
+        if not filtered:  # the actual project hasn't classes to refactor
+            self.state.current_project += 1
+        else:
+            self.state.classes = filtered
 
-
-
+# ----------------------------------------------------------------------------------------------------------------------------#
 
     @listen("class_roadmap")
     def esec_class(self):
-        """
-        Performs a GET request to api/sources/raw to return the code and the path to be refactored of a specific class
-        """
+        """Performs a GET request to api/sources/raw to return the code and the path to be refactored of a specific class"""
 
         if self.state.attempts < ATTEMPTS_MAX:
 
@@ -174,7 +165,6 @@ class OriginalFlow(Flow[ExampleFlow]):
 
     @listen("esec_class")
     def refactor_code(self):
-        global attempts_tot
 
         print(f"\nElaborating project: {self.state.project_list[self.state.current_project]}")
         print(f"\nClass: {self.state.classes[self.state.current_class]}")
@@ -188,66 +178,76 @@ class OriginalFlow(Flow[ExampleFlow]):
                 inputs={"code_class": self.state.code_class, "path_class": self.state.path_class,
                         "errors": self.state.errors})
 
-            self.state.is_validate = result["valid"]
-            self.state.errors = (getattr(result, "errors", "") or "").strip() or "errors"
+            if result is not None and "valid" in result:
+                self.state.is_validate = result["valid"]
+                self.state.errors = (getattr(result, "errors", "") or "").strip() or "errors"
 
             #if errors is an empty string "", then I set self.state.errors simply to "errors"
             #so that templating in task2 works in both cases.
             #While if the agent consider a empty errors with null, then self.state.errors is set to ""
 
+            #if result is None for crew problems or "valid" is not in result,
+            #then validate is not uploaded, remains "" for the previous execution and
+            #the attempts increase, without analyze the refactoring
+
+            #logic for the Research Questions
+            self.rqs_logic(result)
+
+        else:    #N attempts
+            print("\nClass already iterated N times, move on to the next class or next project")
+            self.preparing_new_class()
 
 
-            print(f"VALIDATE: {self.state.is_validate}")
 
-#-------------------------------------------------RQ3------------------------------------------------------------------#
 
+    def rqs_logic(self, result):
+        print(f"VALIDATE: {self.state.is_validate}")
+        global attempts_tot
+
+# -------------------------------------------------RQ3------------------------------------------------------------------#
+
+        if result is not None and "metric" in result:
             self.state.value_metric_post = result["metric"]
             print(f"METRIC VALUE PRE: {self.state.value_metric_pre}")
             print(f"METRIC VALUE POST: {self.state.value_metric_post}")
 
+        if self.state.is_validate:  # Build Success
+            # if the value_metric_post is 0 ? ..........
 
-            if self.state.is_validate:  #Build Success
-                if self.state.value_metric_post == 0:  # the approach hasn't another improvement to do because the metrics for specific project is 0
-                    self.state.current_project += 1  # pass next project
-                    self.state.is_validate = ""
-                    self.state.errors = ""
-                    self.state.attempts = 0  # attempts for new class
-                    self.state.value_metric_pre = 0
-                    self.state.value_metric_post = 0
-
-                else:
-                    if self.state.value_metric_post >= self.state.value_metric_pre:   #there's not improvement
-                        self.state.attempts += 1  #increase number of attempts and refactoring another time this clss
-                        attempts_tot += 1
-                    else:
-                        self.state.value_metric_pre = self.state.value_metric_post  # update old metric value with the new
-                        self.preparing_new_class()
-
-            else:  #Build Failure (compilation error or others errors)
-                self.state.attempts += 1   #increase number of attempts and refactoring another time this clss
+            if self.state.value_metric_post >= self.state.value_metric_pre:  # there's not improvement
+                self.state.attempts += 1  # increase number of attempts and refactoring another time this class
                 attempts_tot += 1
-                print(F"Total Attempts for now: {attempts_tot}")
+            else:
+                self.state.value_metric_pre = self.state.value_metric_post  # update old metric value with the new
+                self.preparing_new_class()
 
-# ----------------------------------------------------------------------------------------------------------------------#
+        else:  # Build Failure (compilation error or others errors)
+            self.state.attempts += 1  # increase number of attempts and refactoring another time this class
+            attempts_tot += 1
+            print(F"Total Attempts for now: {attempts_tot}")
 
+# --------------------------------------------------------------------------------------------------------------------------#
 
 # -------------------------------------------------RQ1/RQ2------------------------------------------------------------------#
 
-            '''if self.state.is_validate:  #Build Success
-                self.preparing_new_class()
+        '''if self.state.is_validate:  #Build Success
+            self.preparing_new_class()
 
 
-            else:  #Build Failure (compilation errors or other errors)
-                self.state.attempts += 1   #increase number of attempts and refactoring another time this clss
-                attempts_tot += 1
-                print(F"Total Attempts for now: {attempts_tot}")'''
+        else:  #Build Failure (compilation errors or other errors)
+            self.state.attempts += 1   #increase number of attempts and refactoring another time this clss
+            attempts_tot += 1
+            print(F"Total Attempts for now: {attempts_tot}")'''
 
 # ---------------------------------------------------------------------------------------------------------------------------#
 
-        else:    #N attempts
-            print("\nClass already iterated 3 times, move on to the next class or next project")
-            self.preparing_new_class()
 
+    def preparing_new_class(self):
+        self.state.current_class += 1  #pass next class
+        self.state.is_validate = ""
+        self.state.errors = "errors"
+        self.state.attempts = 0  #attempts for new class
+        #self.state.value_metric_post = 0    #RQ3
 
 
 def kickoff(directory):
@@ -270,17 +270,15 @@ if __name__ == "__main__":
 
     choice = input("Which dataset do you want to process? [lpo/apache/both]: ").strip().lower()
 
-    #start_time = time.time()
-
     if choice in ["lpo", "both"]:
         print("\n--- Starting procedure for LPO ---\n")
         #comment out the next 3 lines after the first execution
 
-        #validator.clone_lpo_projects()
+        validator.clone_lpo_projects()
         validator.creation_sonar_projects(f"{DIRECTORY_REPOS}{LPO_PATH}")
         validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{LPO_PATH}")
 
-        '''start_time = time.time()
+        start_time = time.time()
         kickoff(f"{DIRECTORY_REPOS}{LPO_PATH}")
 
         total_attempts_lpo = attempts_tot
@@ -293,7 +291,7 @@ if __name__ == "__main__":
 
         print("Attributes post-refactoring (LPO):")
         print(pd.read_csv("attributes_post_refactoring").to_string())
-        total_time_lpo = time.time() - start_time'''
+        total_time_lpo = time.time() - start_time
 
 
 
@@ -301,12 +299,12 @@ if __name__ == "__main__":
         print("\n--- Starting procedure for Apache ---\n")
         #comment out the next 3 lines after the first execution
 
-        #validator.clone_apache_projects()
+        validator.clone_apache_projects()
         validator.creation_sonar_projects(f"{DIRECTORY_REPOS}{APACHE_PATH}")
-        #validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        validator.results_pre_refactoring(f"{DIRECTORY_REPOS}{APACHE_PATH}")
 
         start_time = time.time()
-        '''kickoff(f"{DIRECTORY_REPOS}{APACHE_PATH}")
+        kickoff(f"{DIRECTORY_REPOS}{APACHE_PATH}")
 
         total_attempts_apache = attempts_tot
 
@@ -318,7 +316,7 @@ if __name__ == "__main__":
 
         print("Attributes post-refactoring (Apache):")
         print(pd.read_csv("attributes_post_refactoring").to_string())
-        total_time_apache = time.time() - start_time'''
+        total_time_apache = time.time() - start_time
 
 
 

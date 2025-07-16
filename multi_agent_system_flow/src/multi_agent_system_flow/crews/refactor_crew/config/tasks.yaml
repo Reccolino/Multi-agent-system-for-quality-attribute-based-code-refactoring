@@ -1,48 +1,54 @@
 
-task1:
-  description: |
-    You are MasterPrompt, a Static Analysis Expert focused on Java Bug Detection.
+#----------------------------------------------RQ3 (BUGS)-------------------------------------------------------------#
 
-    Analyze the following Java source code:
-    {code_class}
-    
-    Then create a **clear and actionable prompt** that will guide an AI tool to:
-      1. Perform a full static analysis targeting **Bug-type issues** in:
-         - **SonarQube**, prioritizing "Bugs"
-         - **PMD**: Detect poor loop logic, null dereferences, faulty try/catch blocks
-         - **SpotBugs**: Identify threading bugs, infinite loops, incorrect equals/hashCode use
-         - **Checkstyle**: Find unreachable code or suspicious constructs
-      2. Request identification of:
-         - Logic bugs, state corruption issues, faulty comparisons
-         - Null pointer risks, incorrect object lifecycle usage
-         - API misuse, especially around collections and IO streams
-      3. Focus on runtime correctness and edge-case stability
-      4. Include instructions to **suggest corrections**, not perform them
+#task1:
+#  description: |
+#    You are MasterPrompt, a Static Analysis Expert focused on Java Bug Detection.
 
-  expected_output: |
-    A single, concise English prompt that can be fed into a downstream AI agent
-    for bug detection and remediation in Java. The prompt must:
-      - Specify tools to use (SonarQube, PMD, SpotBugs, Checkstyle)
-      - Focus only on **bugs**, not style or security
-      - Include targeted instruction for issue identification and correction suggestions
-      - Avoid modifying code; just guide analysis
+#    Analyze the following Java source code:
+#    {code_class}
 
-  agent: query_writer
+#    Then create a **clear and actionable prompt** that will guide an AI tool to:
+#      1. Perform a full static analysis targeting **Bug-type issues** in:
+#        - **SonarQube**, prioritizing "Bugs"
+#         - **PMD**: Detect poor loop logic, null dereferences, faulty try/catch blocks
+#         - **SpotBugs**: Identify threading bugs, infinite loops, incorrect equals/hashCode use
+#         - **Checkstyle**: Find unreachable code or suspicious constructs
+#      2. Request identification of:
+#         - Logic bugs, state corruption issues, faulty comparisons
+#         - Null pointer risks, incorrect object lifecycle usage
+#         - API misuse, especially around collections and IO streams
+#      3. Focus on runtime correctness and edge-case stability
+#      4. Include instructions to **suggest corrections**, not perform them
+
+#  expected_output: |
+#    A single, concise English prompt that can be fed into a downstream AI agent
+#    for bug detection and remediation in Java. The prompt must:
+#      - Specify tools to use (SonarQube, PMD, SpotBugs, Checkstyle)
+#      - Focus only on **bugs**, not style or security
+#      - Include targeted instruction for issue identification and correction suggestions
+#      - Avoid modifying code; just guide analysis
+
+#  agent: query_writer
+
+
+#----------------------------------------------------------------------------------------------------------------------------------------#
+
+
 
 #----------------------------------------------RQ3 (SECURITY VULNERABILITIES)-------------------------------------------------------------#
 
-# task1:
+#task1:
 #   description: |
-#     You are MasterPrompt, a Security-Centric Static Code Analysis Specialist.
+#    You are MasterPrompt, a Security-Centric Static Code Analysis Specialist.
 #     Analyze the following Java source code:
 #     {code_class}
-#
+ 
 #     Then create a **single, comprehensive English prompt** that:
 #       1. Instructs an AI system to run a **security-focused static code scan** using:
-#          - SonarQube with custom Quality Profiles that emphasize Vulnerabilities, Security Hotspots,
-#            and Blocker/Critical issues.
+#          - SonarQube with custom Quality Profiles that emphasize Vulnerabilities, Security Hotspots
 #          - SpotBugs with the **FindSecurityBugs** plugin.
-#          - PMD and Checkstyle for detecting risky patterns or non-compliant styles.
+#         - PMD and Checkstyle for detecting risky patterns or non-compliant styles.
 #       2. Maps all findings to **OWASP Top 10** vulnerabilities (e.g., A01:2021 - Broken Access Control,
 #          A03:2021 - Injection).
 #       3. Prioritizes findings based on **severity and exploitability**.
@@ -53,7 +59,7 @@ task1:
 #          - Removal of insecure dependencies
 #       5. Specifies that the output **must not include code changes**, but instead **instruct** another AI agent
 #          on what to analyze and how to secure the code.
-#
+
 #   expected_output: |
 #     A well-structured, security-focused prompt (in English) ready to be passed to a downstream AI model
 #     that performs Java code review or refactoring. The prompt must:
@@ -62,7 +68,7 @@ task1:
 #       - Recommend secure remediation.
 #       - Avoid verbose descriptions or generic statements.
 #       - Be clear, actionable, and specific.
-#
+
 #   agent: query_writer
 
 #--------------------------------------------------------------------------------------------------------------------------------#
@@ -71,38 +77,38 @@ task1:
 #------------------------------------------------------RQ3 (CODE SMELLS)--------------------------------------------------------#
 
 
-# task1:
-#   description: |
-#     You are MasterPrompt, a Static Code Analysis Expert specializing in **Code Smells**.
-#     Analyze the following Java source code:
-#     {code_class}
-#
-#     Create a comprehensive English prompt that instructs an AI system or automated tool to:
-#     1. Run static code analysis focusing on code smells using:
-#        - SonarQube Quality Profiles targeting maintainability, readability, complexity, and duplication.
-#        - Checkstyle for style and naming consistency.
-#        - PMD for detecting long methods, large classes, and unused code.
-#        - FindBugs/SpotBugs for inefficiencies and resource leaks.
-#     2. Identify and prioritize code smells such as duplicated code, long methods, large classes,
-#        improper naming, dead code, and high cyclomatic complexity.
-#     3. Recommend specific remediation steps:
-#        - Refactor long methods into smaller, reusable units.
-#        - Rename unclear or inconsistent identifiers.
-#        - Remove redundant or unused code.
-#        - Simplify complex conditional logic.
-#        - Apply modularization and design patterns where applicable.
-#     4. Produce a single, clear, actionable prompt (in English) that can be passed verbatim
-#        to another AI agent for refactoring guidance.
-#     5. Do not include direct code changes—only instructions and analysis guidance.
-#
-#   expected_output: |
-#     A precise, well-structured English prompt that:
-#     - Directs the AI to run SonarQube, Checkstyle, PMD, and SpotBugs scans focusing on code smells.
-#     - Guides identification of common maintainability issues and complexity bottlenecks.
-#     - Suggests concrete, maintainability-driven refactoring and cleanup actions.
-#     - Is concise, clear, and ready for use by a downstream AI model for automated refactoring.
-#
-#   agent: query_writer
+task1:
+   description: |
+     You are MasterPrompt, a Static Code Analysis Expert specializing in **Code Smells**.
+     Analyze the following Java source code:
+     {code_class}
+     
+     Create a comprehensive English prompt that instructs an AI system or automated tool to:
+     1. Run static code analysis focusing on code smells using:
+        - SonarQube Quality Profiles targeting maintainability, code smells, technical debt ratio.
+        - Checkstyle for style and naming consistency.
+        - PMD for detecting long methods, large classes, and unused code.
+        - FindBugs/SpotBugs for inefficiencies and resource leaks.
+     2. Identify and prioritize code smells such as duplicated code, long methods, large classes,
+        improper naming, dead code, and high cyclomatic complexity.
+     3. Recommend specific remediation steps:
+        - Refactor long methods into smaller, reusable units.
+        - Rename unclear or inconsistent identifiers.
+        - Remove redundant or unused code.
+        - Simplify complex conditional logic.
+        - Apply modularization and design patterns where applicable.
+     4. Produce a single, clear, actionable prompt (in English) that can be passed verbatim
+        to another AI agent for refactoring guidance.
+     5. Do not include direct code changes—only instructions and analysis guidance.
+
+   expected_output: |
+     A precise, well-structured English prompt that:
+     - Directs the AI to run SonarQube, Checkstyle, PMD, and SpotBugs scans focusing on code smells.
+     - Guides identification of common maintainability issues and complexity bottlenecks.
+     - Suggests concrete, maintainability-driven refactoring and cleanup actions.
+     - Is concise, clear, and ready for use by a downstream AI model for automated refactoring.
+
+   agent: query_writer
 
 #--------------------------------------------------------------------------------------------------------------------------------#
 
@@ -110,8 +116,8 @@ task1:
 
 #-----------------------------------------------------RQ1 / RQ2-------------------------------------------------------------------#
 
-# task1:
-#     # PER LA RQ2 DEVO CAMBIARE QUI E BACKSTORY AGENT, PER FAR SI CHE SI SPECIALIZZI PIU SU UN ATTRIBUTO
+#task1:
+#    # PER LA RQ2 DEVO CAMBIARE QUI E BACKSTORY AGENT, PER FAR SI CHE SI SPECIALIZZI PIU SU UN ATTRIBUTO
 #     description: |
 #         You are MasterPrompt, a Security-Focused Static Code Analysis Expert.
 #         Analyze the following Java source code:
@@ -133,13 +139,11 @@ task1:
 #         5. **Format and Output**
 #            - The final output must be a single, clear prompt (in English) that can be provided verbatim to another AI model.
 #            - Do not include code modifications yourself—only craft the instructions.
-
 #     expected_output: |
 #       A single, self-contained English prompt that:
 #       - Clearly tells an AI agent how to run SonarQube and Java plugin scans (Checkstyle, PMD, FindBugs).
 #       - Guides the AI to identify bad practices, code smells, style/logic inconsistencies, and critical security flaws (OWASP Top 10).
 #       - Instructs the AI on remediation actions (secure APIs, input sanitization, configuration fixes, writing tests).
-
 #     agent: query_writer
 
 #-----------------------------------------------------------------------------------------------------------------------------#
@@ -191,7 +195,7 @@ task3:
 
 task4:
    description: >
-        Execute terminal commands passing the {path_class} to the SonarScanner tool.
+        Execute terminal commands passing the {path_class} to the SonarScanner tool (it's necessary).
 
    expected_output: |
         If the scanner completed successfully, without returning code or errors
@@ -225,9 +229,8 @@ conditional_task6:
     expected_output: |
         Return a JSON containing:    
         - "valid": with the valid value returned from task4
-        - "errors": do a summary of task4 errors, such as:
-          - [Error Type]: brief description and suggestion.
-          - [Another Type]: ...
+        - "errors": do a summary of task4 errors:
+          
         IMPORTANT: the "valid" field in the output JSON must exactly match
         the "valid" from task4 without any modification.
 

@@ -1,9 +1,5 @@
 import json
-import random
-import time
-
 import requests
-
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.costants import HEADER, \
     FILE_REPORT_PRE_REFACTORING, FILE_REPORT_POST_REFACTORING, METRIC_TO_REFACTOR
 from multi_agent_system_flow.src.multi_agent_system_flow.crews.validation.utility_methods import scanner_da_terminale, \
@@ -197,7 +193,7 @@ def classes_for_project(project):
     param = {
         "component": f"Project_{project}",
         "metricKeys":  f"{METRIC_TO_REFACTOR}",
-        "qualifiers": "FIL",
+        "qualifiers": "FIL",                       #no test classes
         "s": "metric",
         "metricSort": f"{METRIC_TO_REFACTOR}",
         "ps": 5,                    #here you cn modify the number of classes by sonarqube
